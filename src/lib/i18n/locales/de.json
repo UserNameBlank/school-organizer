@@ -1,0 +1,86 @@
+{
+	"titles": {
+		"home": "Startseite",
+		"timetable": "Stundenplan",
+		"homework": "Hausaufgaben",
+		"subjects": "Fächer",
+		"settings": "Einstellungen"
+	},
+	"ui": {
+		"cancel": "Abbrechen",
+		"save": "Speichern",
+		"delete": "Löschen",
+		"add": "Hinzufügen"
+	},
+	"subjects": {
+		"no-subjects": "Du hast noch kein Fach hinzugefügt.",
+		"new-subject": "Neues Fach",
+		"drawer": {
+			"edit-subjects": {
+				"title": "Fach bearbeiten"
+			},
+			"new-subject": {
+				"title": "Neues Fach"
+			},
+			"name-label": "Name",
+			"color-label": "Farbe"
+		}
+	},
+	"homework": {
+		"no-subjects": {
+			"title": "Du hast noch kein Fach erstellt",
+			"subtitle": "Du hast noch kein Fach erstellt. Erstell eins."
+		},
+		"drawer": {
+			"edit-homework": {
+				"title": "Hausaufgaben bearbeiten"
+			},
+			"add-homework": {
+				"title": "Füge Hausaufgabe hinzu",
+				"desc-label": "Beschreibung",
+				"tabs": {
+					"automatic": "Stunden",
+					"manual": "Datum"
+				},
+				"lessons-label": "Bis zur {count, plural, one {nächsten} other {#}} Schulstunde",
+				"pick-date": "Datum auswählen"
+			}
+		},
+		"card": {
+			"no-homework": "keine Hausaufgaben",
+			"times": {
+				"days": "noch {count, plural, one {# Tag} other {# Tage}}",
+				"hours": "noch {count, plural, one {# Stunde} other {# Stunden}}",
+				"minutes": "noch {count, plural, one {# Minute} other {# Minuten}}",
+				"expired": "abgelaufen"
+			}
+		}
+	},
+	"timetable": {
+		"days": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"],
+		"edit-label": "Bearbeiten...",
+		"drawer": {
+			"reset-slot": {
+				"title": "Slot zurücksetzen",
+				"subtitle": "Die Aktion wird diesen Slot zurücksetzen",
+				"button": "Zurücksetzen"
+			},
+			"set-slot": {
+				"title": "Setze Fach",
+				"subtitle": "Setze ein Fach in den Stundenplan ein",
+				"button": "Einsetzen"
+			}
+		}
+	},
+	"settings": {
+		"import-content": "Importiere Fächer und Stundenplan",
+		"export-content": "Exportiere Fächer und Stundenplan",
+		"save-to-webstore": "in Webstore speichern",
+		"language": "Sprache",
+
+		"languages": {
+			"de": "Deutsch",
+			"en": "Englisch"
+		}
+	}
+}

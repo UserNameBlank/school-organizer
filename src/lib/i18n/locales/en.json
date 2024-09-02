@@ -1,0 +1,86 @@
+{
+	"titles": {
+		"home": "Start",
+		"timetable": "Timetable",
+		"homework": "Homework",
+		"subjects": "Subjects",
+		"settings": "Settings"
+	},
+	"ui": {
+		"cancel": "Cancel",
+		"save": "Save",
+		"delete": "Delete",
+		"add": "Add"
+	},
+	"subjects": {
+		"no-subjects": "There are no subjects yet.",
+		"new-subject": "New Subject",
+		"drawer": {
+			"edit-subjects": {
+				"title": "Edit subject"
+			},
+			"new-subject": {
+				"title": "New subject"
+			},
+			"name-label": "Name",
+			"color-label": "Color"
+		}
+	},
+	"homework": {
+		"no-subjects": {
+			"title": "There are no subjects yet.",
+			"subtitle": "Add a new subject to get started."
+		},
+		"drawer": {
+			"edit-homework": {
+				"title": "Edit homework"
+			},
+			"add-homework": {
+				"title": "Add homework",
+				"desc-label": "Description",
+				"tabs": {
+					"automatic": "Lessons",
+					"manual": "Date"
+				},
+				"lessons-label": "up to {count, plural, one {the next lesson} other {# lessons}}",
+				"pick-date": "Select date"
+			}
+		},
+		"card": {
+			"no-homework": "no homework",
+			"times": {
+				"days": "{count, plural, one {# day} other {# days}} left",
+				"hours": "{count, plural, one {# hour} other {# hours}} left",
+				"minutes": "{count, plural, one {# minute} other {# minutes}} left",
+				"expired": "expired"
+			}
+		}
+	},
+	"timetable": {
+		"days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+		"edit-label": "editing...",
+		"drawer": {
+			"reset-slot": {
+				"title": "Reset slot",
+				"subtitle": "reset the current slot",
+				"button": "Reset"
+			},
+			"set-slot": {
+				"title": "Set Subject",
+				"subtitle": "Set subject in the timetable",
+				"button": "Set Slot"
+			}
+		}
+	},
+	"settings": {
+		"import-content": "Import subjects and timetable",
+		"export-content": "Export subjects and timetable",
+		"save-to-webstore": "Save to WebStore",
+		"language": "Language",
+
+		"languages": {
+			"de": "German",
+			"en": "English"
+		}
+	}
+}
