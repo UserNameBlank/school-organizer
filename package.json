@@ -15,6 +15,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@capacitor/assets": "^3.0.5",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/adapter-static": "^3.0.4",
 		"@sveltejs/kit": "^2.0.0",
