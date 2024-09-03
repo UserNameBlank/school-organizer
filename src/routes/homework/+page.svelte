@@ -312,7 +312,7 @@
 									bind:value={currentDate}
 									initialFocus
 									minValue={today(getLocalTimeZone())}
-									locale={$locale}
+									locale={$locale ?? 'en'}
 								/>
 							</Popover.Content>
 						</Popover.Root>

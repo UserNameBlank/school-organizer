@@ -12,6 +12,19 @@
 		"delete": "Löschen",
 		"add": "Hinzufügen"
 	},
+	"home": {
+		"homework-label": {
+			"none": "Keine Hausaufgaben!!! 🎉",
+			"all-done": "Alle Hausaufgaben erledigt! 🥳🥳🥳",
+			"one": "Nur eine Hausaufgabe übrig, fast geschafft!",
+			"few": "noch {count} Hausaufgaben übrig, bleib dran!",
+			"many": "{count} Hausaufgaben übrig, jetzt oder nie!",
+			"other": "{count} Hausaufgaben... 💀"
+		},
+		"homework-next": "nächste Hausaufgabe",
+		"goto-homeworks": "Hausaufgaben aufrufen",
+		"goto-timetable": "Stundenplan aufrufen"
+	},
 	"subjects": {
 		"no-subjects": "Du hast noch kein Fach hinzugefügt.",
 		"new-subject": "Neues Fach",

@@ -176,11 +176,3 @@
 		{$t('timetable.edit-label')}
 	</div>
 {/if}
-
-<style>
-	.grid-bg {
-		background-size: 200px 200px;
-		background-image: linear-gradient(to right, grey 1px, transparent 1px),
-			linear-gradient(to bottom, grey 1px, transparent 1px);
-	}
-</style>
