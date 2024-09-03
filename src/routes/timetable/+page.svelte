@@ -3,12 +3,14 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Toggle } from '$lib/components/ui/toggle';
 	import { Pencil, PencilOff, Plus } from 'lucide-svelte';
-	import { subjects, timetable } from '$lib/stores';
+	import { currentTab, subjects, timetable } from '$lib/stores';
 	import { slide } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import type { Subject } from '$lib/Subject';
 	import { dataService } from '$lib/database';
 	import { t, json } from 'svelte-i18n';
+
+	$: $currentTab = $t('titles.timetable');
 
 	let editMode = false;
 	let drawerOpen = false;

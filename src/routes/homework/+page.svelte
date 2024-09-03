@@ -11,7 +11,7 @@
 	} from 'lucide-svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { t, locale } from 'svelte-i18n';
-	import { subjects, homeworks, timetable } from '$lib/stores';
+	import { subjects, homeworks, timetable, currentTab as globalCurrentTab } from '$lib/stores';
 	import timetabletimes from '$lib/timetabletimes';
 	import HomeworkCard from '$lib/components/HomeworkCard.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -24,6 +24,8 @@
 	import type { Homework } from '$lib/Homework';
 	import { fly } from 'svelte/transition';
 	import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+
+	$: $globalCurrentTab = $t('titles.homework');
 
 	let drawerOpen = false;
 	let currentId: number | null = null;

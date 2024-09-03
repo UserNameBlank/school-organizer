@@ -3,14 +3,17 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Import } from 'lucide-svelte';
 	import { FilePicker } from '@capawesome/capacitor-file-picker';
+	import { Preferences } from '@capacitor/preferences';
 	import type { Subject } from '$lib/Subject';
 	import { dataService } from '$lib/database';
 	import { t, locales, locale } from 'svelte-i18n';
-	import { subjects, timetable } from '$lib/stores';
+	import { currentTab, subjects, timetable } from '$lib/stores';
 
 	import { Capacitor } from '@capacitor/core';
 	import Label from '$lib/components/ui/label/label.svelte';
 	const platform = Capacitor.getPlatform();
+
+	$: $currentTab = $t('titles.settings');
 
 	async function importContent() {
 		let result = await FilePicker.pickFiles({
@@ -85,7 +88,11 @@
 		await dataService.saveToStore();
 	}
 
-	const onLanguageSelectedChanged = (selected: any) => locale.set(selected.value);
+	async function onLanguageSelectedChanged(selected: any) {
+		$locale = selected.value;
+
+		await Preferences.set({ key: 'language', value: selected.value });
+	}
 </script>
 
 <div class="grid w-full gap-6 px-16 py-10">
@@ -107,13 +114,13 @@
 		<Label for="select">{$t('settings.language')}</Label>
 		<Select.Root
 			selected={{
-				label: $t('settings.languages.' + $locale),
+				label: $t('settings.languages.' + $locale?.split('-')[0]),
 				value: $locale
 			}}
 			onSelectedChange={onLanguageSelectedChanged}
 		>
 			<Select.Trigger id="select">
-				<Select.Value placeholder={$t('settings.languages.' + $locale)} />
+				<Select.Value />
 			</Select.Trigger>
 			<Select.Content>
 				{#each $locales as l}

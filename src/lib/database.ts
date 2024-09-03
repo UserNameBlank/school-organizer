@@ -7,6 +7,7 @@ class DatabaseService {
 	platform = Capacitor.getPlatform();
 	sqlite = CapacitorSQLite;
 	connection = new SQLiteConnection(CapacitorSQLite);
+	dbName = 'default';
 	db!: SQLiteDBConnection;
 
 	async init() {
@@ -14,7 +15,7 @@ class DatabaseService {
 			await this.connection.initWebStore();
 		}
 
-		this.db = await this.connection.createConnection('test', false, 'no-encryption', 1, false);
+		this.db = await this.connection.createConnection(this.dbName, false, 'no-encryption', 1, false);
 		await this.db.open();
 
 		await this.db.execute(`CREATE TABLE IF NOT EXISTS subjects (
@@ -35,7 +36,7 @@ class DatabaseService {
     );`);
 
 		if (this.platform === 'web') {
-			await this.connection.saveToStore('test');
+			await this.saveToStore();
 		}
 	}
 
@@ -127,7 +128,7 @@ class DatabaseService {
 	}
 
 	async saveToStore() {
-		await this.connection.saveToStore('test');
+		await this.connection.saveToStore(this.dbName);
 	}
 }
 

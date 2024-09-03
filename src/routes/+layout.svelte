@@ -12,7 +12,7 @@
 	import { dataService } from '$lib/database';
 
 	import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
-	import { homeworks, subjects, timetable } from '$lib/stores';
+	import { currentTab, homeworks, subjects, timetable } from '$lib/stores';
 	import type { Subject } from '$lib/Subject';
 	import type { Homework } from '$lib/Homework';
 
@@ -60,13 +60,13 @@
 	let open = false;
 
 	let close = () => (open = false);
-	$: currentTab = $t('titles.home');
+	// $: currentTab = $t('titles.home');
 
 	function link(node: HTMLAnchorElement) {
 		function onClick() {
 			close();
 
-			currentTab = node.textContent as string;
+			// currentTab = node.textContent as string;
 		}
 
 		node.addEventListener('click', onClick);
@@ -90,7 +90,7 @@
 		<div class="menu flex w-full flex-row items-center p-3">
 			<Sheet.Trigger><Menu size={30} /></Sheet.Trigger>
 			<h4 class="flex-1 scroll-m-20 text-center text-2xl font-semibold tracking-tight">
-				{currentTab}
+				{$currentTab}
 			</h4>
 		</div>
 		<div class="flex-1 overflow-y-auto">

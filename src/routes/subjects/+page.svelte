@@ -11,8 +11,10 @@
 	import { Colorpicker } from '$lib/components/ui/colorpicker';
 
 	import { t } from 'svelte-i18n';
-	import { homeworks, subjects } from '$lib/stores';
+	import { currentTab, homeworks, subjects } from '$lib/stores';
 	import type { Subject } from '$lib/Subject';
+
+	$: $currentTab = $t('titles.subjects');
 
 	let colors = [
 		'#00E015',
