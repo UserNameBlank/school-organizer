@@ -43,6 +43,7 @@ UI:
 
 - [shadcn/ui](https://ui.shadcn.com/)
 - [shadcn-svelte](https://shadcn-svelte.com/)
+- [tailwindcss](https://tailwindcss.com/)
 
 ## Licence
 
