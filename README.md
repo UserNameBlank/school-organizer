@@ -20,8 +20,7 @@ cd school-organizer
 bun install
 
 # build the app (using bun)
-bun run build:native
-bunx cap add android
+bun run build
 bunx cap sync
 bunx cap open android # opens up android studio
 
