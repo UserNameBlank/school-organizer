@@ -8,9 +8,9 @@
 	$: homeworksArray = Array.from($homeworks.values());
 	$: undoneHomwork = homeworksArray.filter((homework) => !homework.done);
 	$: earliestHomework = undoneHomwork.sort(
-		(a, b) => (a.due_to?.getTime() ?? Infinity) - (b.due_to?.getTime() ?? Infinity)
+		(a, b) => (a.dueTo?.getTime() ?? Infinity) - (b.dueTo?.getTime() ?? Infinity)
 	)[0];
-	$: earliestHomeworkSubject = earliestHomework ? $subjects.get(earliestHomework.subject_id) : null;
+	$: earliestHomeworkSubject = earliestHomework ? $subjects.get(earliestHomework.subjectId) : null;
 
 	// FIXME: duplicate
 	function getLabel(date: Date): string {
@@ -63,7 +63,7 @@
 				</p>
 				<p class="mx-6 text-lg">{earliestHomework.desc}</p>
 				<p class="flex-1 text-end">
-					{earliestHomework.due_to ? getLabel(earliestHomework.due_to) : ''}
+					{earliestHomework.dueTo ? getLabel(earliestHomework.dueTo) : ''}
 				</p>
 			</div>
 		</a>

@@ -91,6 +91,12 @@
 		"save-to-webstore": "Save to WebStore",
 		"language": "Language",
 
+		"notifications-label": "Notifications",
+		"notifications": {
+			"switch-label": "Show notifications",
+			"time-label": "Time of day"
+		},
+
 		"languages": {
 			"de": "German",
 			"en": "English"

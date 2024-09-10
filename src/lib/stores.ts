@@ -9,3 +9,6 @@ export const homeworks = writable<Map<number, Homework>>(new Map());
 export const timetable = writable<(Subject | null)[]>(new Array(5 * 12).fill(null));
 
 export const currentTab = writable('');
+
+export const showNotifications = writable(false);
+export const notificationTime = writable('17:00');

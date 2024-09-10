@@ -91,6 +91,12 @@
 		"save-to-webstore": "in Webstore speichern",
 		"language": "Sprache",
 
+		"notifications-label": "Benachrichtigungen",
+		"notifications": {
+			"switch-label": "Benachrichtigungen anzeigen",
+			"time-label": "Tageszeit"
+		},
+
 		"languages": {
 			"de": "Deutsch",
 			"en": "Englisch"

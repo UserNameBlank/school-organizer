@@ -54,7 +54,7 @@
 	async function submittedNewSubject() {
 		drawerOpen = false;
 		const subject = { id: 0, name: selectedName, color: colors[selectedColor] };
-		const id = await dataService.addSubject(subject);
+		const { id } = await dataService.addSubject(subject);
 		subject.id = id;
 
 		subjects.update((map) => map.set(id, subject));
@@ -62,7 +62,7 @@
 
 	async function removeSubject() {
 		drawerOpen = false;
-		await dataService.removeSubject(currentSubject!.id);
+		dataService.removeSubject({ id: currentSubject!.id });
 
 		subjects.update((map) => {
 			map.delete(currentSubject!.id);
@@ -72,7 +72,7 @@
 			// list.filter((it) => it.subject_id !== currentId!);
 
 			Array.from(map)
-				.filter(([_key, val]) => val.subject_id === currentSubject!.id)
+				.filter(([_key, val]) => val.subjectId === currentSubject!.id)
 				.forEach(([key, _val]) => {
 					map.delete(key);
 				});
@@ -89,7 +89,7 @@
 			currentSubject!.color = colors[selectedColor];
 		}
 
-		await dataService.editSubject(currentSubject!);
+		dataService.editSubject(currentSubject!);
 
 		subjects.update((map) => map); // Trigger update
 	}

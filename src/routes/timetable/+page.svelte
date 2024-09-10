@@ -34,7 +34,7 @@
 		drawerOpen = false;
 
 		$timetable[currentSlot!] = null;
-		dataService.clearSlot(currentSlot!);
+		dataService.clearTimetableSlot({ id: currentSlot! });
 	}
 
 	async function submitSlot() {
@@ -43,7 +43,7 @@
 		drawerOpen = false;
 
 		$timetable[currentSlot!] = selectedSubject;
-		dataService.setSlot(currentSlot!, selectedSubject.id);
+		dataService.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
 	}
 
 	function onSelectSubject(v: unknown) {

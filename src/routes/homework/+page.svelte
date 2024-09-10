@@ -45,7 +45,7 @@
 
 	$: homeworksArray = Array.from($homeworks).map(([_key, val]) => val);
 
-	$: withHomeworkIds = homeworksArray.map((val) => val.subject_id);
+	$: withHomeworkIds = homeworksArray.map((val) => val.subjectId);
 	$: firstHalf = Array.from($subjects)
 		.map(([_key, val]) => val)
 		.filter((it) => withHomeworkIds.includes(it.id));
@@ -54,7 +54,7 @@
 		.filter((it) => !withHomeworkIds.includes(it.id));
 
 	function getHomeworksBySubjectId(id: number) {
-		return homeworksArray.filter((it) => it.subject_id === id);
+		return homeworksArray.filter((it) => it.subjectId === id);
 	}
 
 	// function orderSubjects(homeworks: Homework[]) {
@@ -86,9 +86,11 @@
 		drawerOpen = true;
 	}
 
-	async function removeHomework(id: number) {
+	function removeHomework(id: number) {
 		currentHomeworks = currentHomeworks.filter((it) => it.id !== id);
-		await dataService.removeHomework(id);
+		dataService.removeHomework({ id });
+
+		console.log(currentHomeworks);
 
 		homeworks.update((map) => {
 			map.delete(id);
@@ -168,12 +170,12 @@
 
 		const homework = {
 			id: 0,
-			subject_id: currentId,
+			subjectId: currentId,
 			desc: currentDesc,
-			due_to: date,
+			dueTo: date,
 			done: false
 		};
-		const id = await dataService.addHomework(homework);
+		const { id } = await dataService.addHomework({ ...homework, dueTo: date?.getTime() ?? null });
 		homework.id = id;
 
 		currentDesc = '';

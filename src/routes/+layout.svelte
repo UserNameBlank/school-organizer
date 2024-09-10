@@ -7,55 +7,58 @@
 	import { t } from 'svelte-i18n';
 
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
-	import { Capacitor } from '@capacitor/core';
+	// import { Capacitor } from '@capacitor/core';
 
 	import { dataService } from '$lib/database';
 
-	import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
+	// import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
 	import { currentTab, homeworks, subjects, timetable } from '$lib/stores';
 	import type { Subject } from '$lib/Subject';
 	import type { Homework } from '$lib/Homework';
 
-	const platform = Capacitor.getPlatform();
+	// const platform = Capacitor.getPlatform();
 
 	async function initData() {
-		await dataService.init();
+		console.log('Data is being initialized...');
 
-		const subs = await dataService.getSubjects();
+		// await dataService.init();
+
+		const subs = (await dataService.getSubjects()).subjects;
 		subjects.set(
 			subs.reduce((map, sub) => {
 				return map.set(sub.id, sub);
 			}, new Map<number, Subject>())
 		);
 
-		await dataService.removeOldHomework();
-		const hws = await dataService.getHomeworks();
+		// await dataService.removeOldHomework();
+		const hws = (await dataService.getHomeworks()).homeworks;
 		homeworks.set(
 			hws.reduce((map, hw) => {
-				return map.set(hw.id, hw);
+				return map.set(hw.id, { ...hw, dueTo: hw.dueTo ? new Date(hw.dueTo) : null });
 			}, new Map<number, Homework>())
 		);
 
-		const slots = await dataService.getSlots();
+		const slots = (await dataService.getTimetableSlots()).slots;
 
 		for (const slot of slots) {
-			$timetable[slot.slot] = $subjects.get(slot.subject_id)!;
+			$timetable[slot.id] = $subjects.get(slot.subjectId)!;
 		}
 	}
 
-	if (typeof window !== 'undefined') {
-		jeepSqlite(window);
-
-		if (platform === 'web') {
-			const jeepEl = document.createElement('jeep-sqlite');
-			document.body.appendChild(jeepEl);
-			customElements.whenDefined('jeep-sqlite').then(async () => await initData());
-		} else {
-			initData();
-		}
-	} else {
-		initData();
-	}
+	initData();
+	// if (typeof window !== 'undefined') {
+	// 	jeepSqlite(window);
+	//
+	// 	if (platform === 'web') {
+	// 		const jeepEl = document.createElement('jeep-sqlite');
+	// 		document.body.appendChild(jeepEl);
+	// 		customElements.whenDefined('jeep-sqlite').then(async () => await initData());
+	// 	} else {
+	// 		initData();
+	// 	}
+	// } else {
+	// 	initData();
+	// }
 
 	let open = false;
 

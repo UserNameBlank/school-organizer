@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name" translatable="false">School Organizer</string>
+    <string name="title_activity_main" translatable="false">School Organizer</string>
+    <string name="package_name" translatable="false">com.schoolorganizer.app</string>
+    <string name="custom_url_scheme" translatable="false">com.schoolorganizer.app</string>
+
+    <string name="notification_channel_database">Homework Notify Channel</string>
+    <string name="notification_database_title">Undone Homework</string>
+    <string name="notification_database_text">You have %d undone homework</string>
+</resources>

@@ -46,7 +46,7 @@
 	}
 
 	async function onCheckedChange(checked: any, homeworkId: number) {
-		await dataService.setHomeworkDone(homeworkId, checked);
+		dataService.setHomeworkDone({ id: homeworkId, done: checked });
 
 		homeworks = homeworks.map((it) => (it.id === homeworkId ? { ...it, done: checked } : it));
 
@@ -77,8 +77,8 @@
 	{:else}
 		<div class="flex items-center">
 			<h3 class="flex-1 scroll-m-20 text-xl font-semibold tracking-tight">{name}</h3>
-			{#if homeworks[0].due_to && homeworks.length === 1}
-				<p>{getLabel(homeworks[0].due_to)}</p>
+			{#if homeworks[0].dueTo && homeworks.length === 1}
+				<p>{getLabel(homeworks[0].dueTo)}</p>
 			{/if}
 		</div>
 		<ul class="ml-5 mt-3 list-disc">
@@ -88,8 +88,8 @@
 						{homework.desc}
 
 						<div class="flex flex-1 items-center justify-end text-end">
-							{#if homeworks.length !== 1 && homework.due_to}
-								<span class="mr-4">{getLabel(homework.due_to)}</span>
+							{#if homeworks.length !== 1 && homework.dueTo}
+								<span class="mr-4">{getLabel(homework.dueTo)}</span>
 							{/if}
 						</div>
 
