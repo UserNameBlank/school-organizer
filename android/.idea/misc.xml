@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="EntryPointsManager">
-    <list size="1">
+    <list size="3">
       <item index="0" class="java.lang.String" itemvalue="com.getcapacitor.PluginMethod" />
+      <item index="1" class="java.lang.String" itemvalue="com.getcapacitor.annotation.ActivityCallback" />
+      <item index="2" class="java.lang.String" itemvalue="com.getcapacitor.annotation.PermissionCallback" />
     </list>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />

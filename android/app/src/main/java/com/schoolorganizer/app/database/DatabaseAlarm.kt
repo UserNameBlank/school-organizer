@@ -11,7 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
-import android.widget.Toast
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -21,6 +21,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.schoolorganizer.app.MainActivity
 import com.schoolorganizer.app.R
+import com.schoolorganizer.app.settings.Preferences
 import java.util.Calendar
 
 class DatabaseAlarm : BroadcastReceiver() {
@@ -36,15 +37,14 @@ class DatabaseAlarm : BroadcastReceiver() {
         }
 
         private fun triggerNotification(count: Int) {
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                Toast.makeText(context, "Enable notification permission", Toast.LENGTH_LONG)
-                    .show()
-                return
-            }
+//            if (ActivityCompat.checkSelfPermission(
+//                    context,
+//                    Manifest.permission.POST_NOTIFICATIONS
+//                ) != PackageManager.PERMISSION_GRANTED
+//            ) {
+//                //TODO: maybe make it ask again
+//                return
+//            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val importance = NotificationManager.IMPORTANCE_DEFAULT
@@ -73,7 +73,7 @@ class DatabaseAlarm : BroadcastReceiver() {
                 .setContentText(context.getString(R.string.notification_database_text, count))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
 
             with(NotificationManagerCompat.from(context)) {
                 if (ActivityCompat.checkSelfPermission(
@@ -89,9 +89,9 @@ class DatabaseAlarm : BroadcastReceiver() {
 
         override fun doWork(): Result {
             val db = Database.getDatabase(context)
-            val homeworkDaoDao = db.homeworkDao()
+            val homeworkDao = db.homeworkDao()
 
-            val count = homeworkDaoDao.countUndone();
+            val count = homeworkDao.countUndone();
 
             if (count > 0) {
                 triggerNotification(count)
@@ -102,46 +102,64 @@ class DatabaseAlarm : BroadcastReceiver() {
 
     }
 
-    private val notificationWork = OneTimeWorkRequestBuilder<DatabaseAlarmWorker>().build()
-
     companion object {
         private const val DATABASE_ALARM_ACTION = "database alarm action";
         private const val DATABASE_ALARM_CODE = 1001;
-    }
 
-    fun start(context: Context, time: Calendar) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, this::class.java).apply {
-            action = DATABASE_ALARM_ACTION
+        fun startFromPreferences(context: Context) {
+            val sharedPreferences = Preferences.getInstance(context)
+
+            if (sharedPreferences.getString("show-notifications", null) == "true") {
+                val time = sharedPreferences.getString("notification-time", "17:00")!!.let {
+                    val first = it.substring(0..1).toInt()
+                    val second = it.substring(3..4).toInt()
+
+                    Calendar.getInstance().apply {
+                        timeInMillis = System.currentTimeMillis()
+                        set(Calendar.HOUR_OF_DAY, first)
+                        set(Calendar.MINUTE, second)
+                    }
+                }
+                val interval = sharedPreferences.getLong("notification-interval", 86400000L)
+
+                Log.i("DATABASE",
+                    "starting database notifier with time: ${time.timeInMillis} interval: $interval")
+
+                start(context, time, interval)
+            }
         }
-        val pendingIntent = PendingIntent.getBroadcast(context, DATABASE_ALARM_CODE, intent,
-            PendingIntent.FLAG_IMMUTABLE)
 
-//        val time = Calendar.getInstance().apply {
-//            timeInMillis = System.currentTimeMillis()
-//            add(Calendar.SECOND, 10)
-//        }
-//        alarmManager.set(AlarmManager.RTC_WAKEUP, time.timeInMillis, pendingIntent)
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, time.timeInMillis,
-            AlarmManager.INTERVAL_DAY, pendingIntent)
-    }
+        fun start(context: Context, time: Calendar, interval: Long) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, DatabaseAlarm::class.java).apply {
+                action = DATABASE_ALARM_ACTION
+            }
+            val pendingIntent = PendingIntent.getBroadcast(context, DATABASE_ALARM_CODE, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
 
-    fun stop(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, this::class.java).apply {
-            action = DATABASE_ALARM_ACTION
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, time.timeInMillis,
+                interval, pendingIntent)
         }
-        val pendingIntent = PendingIntent.getBroadcast(context, DATABASE_ALARM_CODE, intent,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        alarmManager.cancel(pendingIntent)
-        pendingIntent.cancel()
+        fun stop(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, DatabaseAlarm::class.java).apply {
+                action = DATABASE_ALARM_ACTION
+            }
+            val pendingIntent = PendingIntent.getBroadcast(context, DATABASE_ALARM_CODE, intent,
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+        }
     }
+
+    private val notificationWork = OneTimeWorkRequestBuilder<DatabaseAlarmWorker>().build()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         WorkManager.getInstance(context!!).enqueue(notificationWork)
 
-        Toast.makeText(context, "Alarm went off", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, "Alarm went off", Toast.LENGTH_SHORT).show()
     }
 
 }

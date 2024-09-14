@@ -1,5 +1,9 @@
 import { registerPlugin } from '@capacitor/core';
 import type { DatabasePlugin } from './definitions';
+import { homeworks, subjects, timetable } from '$lib/stores';
+import type { Subject } from '$lib/Subject';
+import type { Homework } from '$lib/Homework';
+import { get } from 'svelte/store';
 
 const Database = registerPlugin<DatabasePlugin>('Database');
 
@@ -42,5 +46,33 @@ const Database = registerPlugin<DatabasePlugin>('Database');
 //
 // 	async saveToStore() {}
 // }
+
+export async function loadStores() {
+	const subs = (await Database.getSubjects()).subjects;
+	subjects.set(
+		subs.reduce((map, sub) => {
+			return map.set(sub.id, sub);
+		}, new Map<number, Subject>())
+	);
+
+	// await Database.removeOldHomework();
+	const hws = (await Database.getHomeworks()).homeworks;
+	homeworks.set(
+		hws.reduce((map, hw) => {
+			return map.set(hw.id, { ...hw, dueTo: hw.dueTo ? new Date(hw.dueTo) : null });
+		}, new Map<number, Homework>())
+	);
+
+	const slots = (await Database.getTimetableSlots()).slots;
+
+	const subjectsCloned = get(subjects);
+
+	for (const slot of slots) {
+		timetable.update((map) => {
+			map[slot.id] = subjectsCloned.get(slot.subjectId)!;
+			return map;
+		});
+	}
+}
 
 export const dataService = Database;

@@ -12,3 +12,4 @@ export const currentTab = writable('');
 
 export const showNotifications = writable(false);
 export const notificationTime = writable('17:00');
+export const notificationInterval = writable(86400000);

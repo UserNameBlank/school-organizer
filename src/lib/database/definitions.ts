@@ -24,5 +24,14 @@ export interface DatabasePlugin {
 	getTimetableSlots(): Promise<{ slots: { id: number; subjectId: number }[] }>;
 	clearTimetableSlot(options: { id: number }): Promise<void>;
 
-	setNotificationOptions(options: { allow: boolean; time: string }): Promise<void>;
+	setNotificationOptions(options: {
+		allow: boolean;
+		time: string;
+		interval: number;
+	}): Promise<void>;
+
+	exportContent(): Promise<void>;
+	importContent(): Promise<void>;
+
+	addListener(name: string, callback: (info: any) => void): void;
 }

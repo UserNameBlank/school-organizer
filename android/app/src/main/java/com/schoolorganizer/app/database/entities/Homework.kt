@@ -3,7 +3,7 @@ package com.schoolorganizer.app.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.getcapacitor.JSObject
+import org.json.JSONObject
 
 @Entity(tableName = "homework")
 class Homework(
@@ -17,8 +17,8 @@ class Homework(
     val done: Boolean,
 ) {
 
-    fun toJSObject(): JSObject {
-        val ret = JSObject()
+    fun toJSONObject(): JSONObject {
+        val ret = JSONObject()
         ret.put("id", id)
         ret.put("desc", desc)
         ret.put("subjectId", subjectId)

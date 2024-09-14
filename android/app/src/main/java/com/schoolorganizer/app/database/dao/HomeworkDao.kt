@@ -23,6 +23,8 @@ interface HomeworkDao {
     @Query("UPDATE homework SET done = :done WHERE id = :id")
     fun setDone(id: Int, done: Boolean)
 
-    @Query("SELECT COUNT(*) FROM homework WHERE due_to IS NOT NULL AND done = 0")
+    @Query(
+        "SELECT COUNT(*) FROM homework WHERE due_to IS NOT NULL AND done = 0"
+    )
     fun countUndone(): Int
 }

@@ -9,40 +9,17 @@
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
 	// import { Capacitor } from '@capacitor/core';
 
-	import { dataService } from '$lib/database';
+	import { loadStores } from '$lib/database';
 
 	// import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
-	import { currentTab, homeworks, subjects, timetable } from '$lib/stores';
-	import type { Subject } from '$lib/Subject';
-	import type { Homework } from '$lib/Homework';
+	import { currentTab } from '$lib/stores';
 
 	// const platform = Capacitor.getPlatform();
 
 	async function initData() {
 		console.log('Data is being initialized...');
 
-		// await dataService.init();
-
-		const subs = (await dataService.getSubjects()).subjects;
-		subjects.set(
-			subs.reduce((map, sub) => {
-				return map.set(sub.id, sub);
-			}, new Map<number, Subject>())
-		);
-
-		// await dataService.removeOldHomework();
-		const hws = (await dataService.getHomeworks()).homeworks;
-		homeworks.set(
-			hws.reduce((map, hw) => {
-				return map.set(hw.id, { ...hw, dueTo: hw.dueTo ? new Date(hw.dueTo) : null });
-			}, new Map<number, Homework>())
-		);
-
-		const slots = (await dataService.getTimetableSlots()).slots;
-
-		for (const slot of slots) {
-			$timetable[slot.id] = $subjects.get(slot.subjectId)!;
-		}
+		loadStores();
 	}
 
 	initData();

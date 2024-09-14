@@ -2,7 +2,7 @@ package com.schoolorganizer.app.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.getcapacitor.JSObject
+import org.json.JSONObject
 
 @Entity(tableName = "subjects")
 class Subject(
@@ -12,12 +12,20 @@ class Subject(
     val color: String,
 ) {
 
-    fun toJSObject(): JSObject {
-        val ret = JSObject()
+    fun toJSONObject(): JSONObject {
+        val ret = JSONObject()
         ret.put("id", id)
         ret.put("name", name)
         ret.put("color", color)
         return ret
+    }
+
+    companion object {
+        fun fromJSONObject(obj: JSONObject): Subject {
+            val name = obj.getString("name")
+            val color = obj.getString("color")
+            return Subject(0, name, color)
+        }
     }
 
 }

@@ -2,17 +2,14 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Select from '$lib/components/ui/select';
 	import { Import } from 'lucide-svelte';
-	import { FilePicker } from '@capawesome/capacitor-file-picker';
-	import { Preferences } from '@capacitor/preferences';
-	import type { Subject } from '$lib/Subject';
+	import { Preferences } from '$lib/preferences';
 	import { dataService } from '$lib/database';
 	import { t, locales, locale } from 'svelte-i18n';
 	import {
 		currentTab,
-		subjects,
-		timetable,
 		showNotifications,
-		notificationTime
+		notificationTime,
+		notificationInterval
 	} from '$lib/stores';
 
 	// import { Capacitor } from '@capacitor/core';
@@ -25,97 +22,65 @@
 	$: $currentTab = $t('titles.settings');
 
 	async function importContent() {
-		let result = await FilePicker.pickFiles({
-			types: ['application/json'],
-			limit: 1,
-			readData: true
-		});
-
-		if (result.files[0]) {
-			const content = atob(result.files[0].data!);
-			const json = JSON.parse(content);
-
-			const tita = json.timetable as number[];
-			const subs = json.subjects as Subject[];
-			const idMap = new Map<number, number>();
-
-			for (const subject of subs) {
-				const { id } = await dataService.addSubject(subject);
-				idMap.set(subject.id, id);
-				subject.id = id;
-				// $subjects = [...$subjects, subject];
-				$subjects.set(id, subject);
-			}
-
-			for (let i = 0; i < tita.length; i++) {
-				const subjectId = tita[i];
-				if (subjectId === null) {
-					continue;
-				}
-
-				const realId = idMap.get(subjectId)!;
-				dataService.setTimetableSlot({ id: i, subjectId: realId });
-				$timetable[i] = $subjects.get(realId)!;
-			}
-		}
+		dataService.importContent();
 	}
 
 	async function exportContent() {
-		let obj = {
-			subjects: $subjects,
-			timetable: $timetable.map((it) => it?.id)
-		};
-
-		let content = JSON.stringify(obj);
-		let blob = new Blob([content], { type: 'application/json' });
-
-		// @ts-expect-error
-		if (window.showSaveFilePicker) {
-			// @ts-expect-error
-			const handler = await window.showSaveFilePicker({
-				suggestedName: 'content.json',
-				types: [
-					{
-						description: 'json file',
-						accept: { 'text/plain': ['.json'] }
-					}
-				]
-			});
-			await handler.createWritable().write([blob]);
-		} else {
-			let url = URL.createObjectURL(blob);
-			let anchor = document.createElement('a');
-			anchor.href = url;
-			anchor.download = 'content.json';
-			anchor.click();
-			URL.revokeObjectURL(url);
-			anchor.remove();
-		}
+		dataService.exportContent();
 	}
 
 	// async function saveContent() {
 	// 	await dataService.saveToStore();
 	// }
 
-	async function onLanguageSelectedChanged(selected: any) {
+	function onLanguageSelectedChanged(selected: any) {
 		$locale = selected.value;
 
-		await Preferences.set({ key: 'language', value: selected.value });
+		Preferences.setString({ key: 'language', value: selected.value });
 	}
 
 	async function onShowNotificationsChanged(checked: boolean) {
-		$showNotifications = checked;
+		try {
+			await dataService.setNotificationOptions({
+				allow: checked,
+				time: $notificationTime,
+				interval: $notificationInterval
+			});
 
-		await Preferences.set({ key: 'show-notifications', value: checked.toString() });
-		dataService.setNotificationOptions({ allow: checked, time: $notificationTime });
+			$showNotifications = checked;
+			Preferences.setString({ key: 'show-notifications', value: checked.toString() });
+		} catch (e) {
+			$showNotifications = false;
+		}
 	}
 
 	async function onTimeChanged(time: string) {
-		$notificationTime = time;
+		await dataService.setNotificationOptions({
+			allow: $showNotifications,
+			time: time,
+			interval: $notificationInterval
+		});
 
-		await Preferences.set({ key: 'notification-time', value: time });
-		dataService.setNotificationOptions({ allow: $showNotifications, time: time });
+		$notificationTime = time;
+		Preferences.setString({ key: 'notification-time', value: time });
 	}
+
+	async function onIntervalChanged(selected: any) {
+		await dataService.setNotificationOptions({
+			allow: $showNotifications,
+			time: $notificationTime,
+			interval: selected.value
+		});
+
+		$notificationInterval = selected.value;
+		Preferences.setLong({ key: 'notification-interval', value: selected.value });
+	}
+
+	const intervalTimes = new Map<number, string>([
+		[86400000, 'Once a Day'],
+		[43200000, 'Twice a Day'],
+		[21600000, 'Three Times a Day']
+	]);
 </script>
 
 <div class="grid w-full gap-6 px-16 py-10">
@@ -158,12 +123,33 @@
 		<div id="notifications" class="grid gap-3 px-4">
 			<div class="flex flex-row items-center">
 				<p class="flex-1">{$t('settings.notifications.switch-label')}</p>
-				<Switch checked={$showNotifications} onCheckedChange={onShowNotificationsChanged} />
+				<Switch bind:checked={$showNotifications} onCheckedChange={onShowNotificationsChanged} />
 			</div>
 			{#if $showNotifications}
-				<div transition:fly={{ y: -10 }} class="flex flex-row items-center">
-					<p class="flex-1">{$t('settings.notifications.time-label')}</p>
-					<Timepicker time={$notificationTime} onSubmit={onTimeChanged} />
+				<div transition:fly={{ y: -10 }} class="grid gap-3">
+					<div class="flex flex-row items-center">
+						<p class="flex-1">{$t('settings.notifications.time-label')}</p>
+						<Timepicker time={$notificationTime} onSubmit={onTimeChanged} />
+					</div>
+					<div class="flex flex-row items-center">
+						<p class="flex-1">Interval</p>
+						<Select.Root
+							selected={{
+								label: intervalTimes.get($notificationInterval),
+								value: $notificationInterval
+							}}
+							onSelectedChange={onIntervalChanged}
+						>
+							<Select.Trigger class="w-48">
+								<Select.Value />
+							</Select.Trigger>
+							<Select.Content>
+								{#each intervalTimes as [key, value]}
+									<Select.Item value={key}>{value}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+					</div>
 				</div>
 			{/if}
 		</div>

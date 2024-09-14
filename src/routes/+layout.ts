@@ -1,9 +1,10 @@
 import { getLocaleFromNavigator, locale, waitLocale } from 'svelte-i18n';
 import '$lib/i18n';
 import type { LayoutLoad } from './$types';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '$lib/preferences';
 import { App } from '@capacitor/app';
-import { notificationTime, showNotifications } from '$lib/stores';
+import { notificationInterval, notificationTime, showNotifications } from '$lib/stores';
+import { dataService, loadStores } from '$lib/database';
 
 export const prerender = true;
 export const ssr = false;
@@ -16,8 +17,19 @@ export const load: LayoutLoad = async () => {
 		}
 	});
 
-	locale.set((await Preferences.get({ key: 'language' })).value ?? getLocaleFromNavigator());
-	showNotifications.set((await Preferences.get({ key: 'show-notifications' })).value == 'true');
-	notificationTime.set((await Preferences.get({ key: 'notification-time' })).value ?? '17:00');
+	dataService.addListener('contentImported', (info: any) => {
+		loadStores();
+	});
+
+	locale.set((await Preferences.getString({ key: 'language' })).value ?? getLocaleFromNavigator());
+	showNotifications.set(
+		(await Preferences.getString({ key: 'show-notifications' })).value == 'true'
+	);
+	notificationTime.set(
+		(await Preferences.getString({ key: 'notification-time' })).value ?? '17:00'
+	);
+	notificationInterval.set(
+		(await Preferences.getLong({ key: 'notification-interval' })).value ?? 86400000
+	);
 	await waitLocale();
 };
