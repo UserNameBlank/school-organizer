@@ -13,11 +13,7 @@ class PreferencesPlugin : Plugin() {
     private lateinit var sharedPreferences: SharedPreferences
 
     override fun load() {
-        try {
-            sharedPreferences = Preferences.getInstance(context)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        sharedPreferences = Preferences.getInstance(context)
     }
 
     @PluginMethod
