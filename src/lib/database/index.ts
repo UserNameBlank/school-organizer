@@ -48,6 +48,10 @@ const Database = registerPlugin<DatabasePlugin>('Database');
 // }
 
 export async function loadStores() {
+	subjects.set(new Map());
+	homeworks.set(new Map());
+	timetable.set(new Array(12 * 5));
+
 	const subs = (await Database.getSubjects()).subjects;
 	subjects.set(
 		subs.reduce((map, sub) => {

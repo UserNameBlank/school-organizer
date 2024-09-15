@@ -17,7 +17,7 @@ export const load: LayoutLoad = async () => {
 		}
 	});
 
-	dataService.addListener('contentImported', (info: any) => {
+	dataService.addListener('contentImported', () => {
 		loadStores();
 	});
 
