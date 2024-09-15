@@ -77,9 +77,9 @@
 	}
 
 	const intervalTimes = new Map<number, string>([
-		[86400000, 'Once a Day'],
-		[43200000, 'Twice a Day'],
-		[21600000, 'Three Times a Day']
+		[86400000, $t('settings.notification-intervals.one')],
+		[43200000, $t('settings.notification-intervals.two')],
+		[21600000, $t('settings.notification-intervals.three')]
 	]);
 </script>
 

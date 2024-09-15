@@ -96,6 +96,11 @@
 			"switch-label": "Show notifications",
 			"time-label": "Time of day"
 		},
+		"notification-intervals": {
+			"one": "Once per day",
+			"two": "Twice per day",
+			"three": "Thrice per day"
+		},
 
 		"languages": {
 			"de": "German",

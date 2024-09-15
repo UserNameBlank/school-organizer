@@ -96,6 +96,11 @@
 			"switch-label": "Benachrichtigungen anzeigen",
 			"time-label": "Tageszeit"
 		},
+		"notification-intervals": {
+			"one": "Einmal pro Tag",
+			"two": "Zwei mal pro Tag",
+			"three": "Drei mal pro Tag"
+		},
 
 		"languages": {
 			"de": "Deutsch",
