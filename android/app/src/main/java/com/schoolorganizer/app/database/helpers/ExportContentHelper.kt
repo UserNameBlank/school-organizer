@@ -1,22 +1,16 @@
-package com.schoolorganizer.app.database.content
+package com.schoolorganizer.app.database.helpers
 
-import android.content.ContentResolver
 import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.Operation
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import androidx.work.await
 import com.schoolorganizer.app.database.Database
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.UUID
 
 object ExportContentHelper {
 

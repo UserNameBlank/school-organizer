@@ -1,4 +1,4 @@
-package com.schoolorganizer.app.database.content
+package com.schoolorganizer.app.database.helpers
 
 import android.content.Context
 import androidx.lifecycle.LiveData

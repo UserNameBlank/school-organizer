@@ -19,8 +19,8 @@ import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
-import com.schoolorganizer.app.database.content.ExportContentHelper
-import com.schoolorganizer.app.database.content.ImportContentHelper
+import com.schoolorganizer.app.database.helpers.ExportContentHelper
+import com.schoolorganizer.app.database.helpers.ImportContentHelper
 import com.schoolorganizer.app.database.entities.Homework
 import com.schoolorganizer.app.database.entities.Subject
 import com.schoolorganizer.app.database.entities.TimetableSlot

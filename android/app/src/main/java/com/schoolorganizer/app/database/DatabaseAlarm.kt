@@ -158,8 +158,6 @@ class DatabaseAlarm : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         WorkManager.getInstance(context!!).enqueue(notificationWork)
-
-//        Toast.makeText(context, "Alarm went off", Toast.LENGTH_SHORT).show()
     }
 
 }
