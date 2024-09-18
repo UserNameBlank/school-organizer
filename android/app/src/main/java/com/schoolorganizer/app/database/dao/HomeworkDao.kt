@@ -17,6 +17,9 @@ interface HomeworkDao {
     @Query("DELETE FROM homework WHERE id = :id")
     fun deleteById(id: Int)
 
+    @Query("DELETE FROM homework WHERE subject_id = :id")
+    fun deleteBySubjectId(id: Int)
+
     @Query("DELETE FROM homework WHERE due_to IS NOT NULL AND done > 0 AND due_to < :timestamp")
     fun deleteOld(timestamp: Long)
 

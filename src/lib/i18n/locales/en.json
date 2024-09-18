@@ -10,7 +10,8 @@
 		"cancel": "Cancel",
 		"save": "Save",
 		"delete": "Delete",
-		"add": "Add"
+		"add": "Add",
+		"undo": "Undo"
 	},
 	"home": {
 		"homework-label": {
@@ -28,6 +29,8 @@
 	"subjects": {
 		"no-subjects": "There are no subjects yet.",
 		"new-subject": "New Subject",
+		"name-already-exists": "{name} already exists.",
+		"subject-removed": "removed {name}.",
 		"drawer": {
 			"edit-subjects": {
 				"title": "Edit subject"
@@ -88,8 +91,17 @@
 	"settings": {
 		"import-content": "Import subjects and timetable",
 		"export-content": "Export subjects and timetable",
+		"content-imported": "content successfully imported",
+		"content-exported": "content successfully exported",
 		"save-to-webstore": "Save to WebStore",
 		"language": "Language",
+		"general": "General settings",
+		"theme-label": "Theme",
+		"themes": {
+			"system": "System",
+			"dark": "Dark",
+			"light": "White"
+		},
 
 		"notifications-label": "Notifications",
 		"notifications": {

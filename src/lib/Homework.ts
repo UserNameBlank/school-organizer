@@ -2,6 +2,6 @@ export interface Homework {
 	id: number;
 	desc: string;
 	subjectId: number;
-	dueTo: Date | null;
+	dueTo: number | null;
 	done: boolean;
 }

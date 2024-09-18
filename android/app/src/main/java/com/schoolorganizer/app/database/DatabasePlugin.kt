@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlarmManager
 import android.content.Intent
+import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -60,13 +61,29 @@ class DatabasePlugin : Plugin() {
     }
 
     @PluginMethod
+    fun getSubjectsWithHomework(call: PluginCall) {
+        val subjectDao = db.subjectDao()
+
+        val subjects = subjectDao.getAllWithHomework().map { it.toJSONObject() }
+
+        val ret = JSObject()
+        ret.put("subjects", JSArray(subjects))
+        call.resolve(ret)
+    }
+
+    @PluginMethod
     fun addSubject(call: PluginCall) {
         val subjectDao = db.subjectDao()
 
         val name = call.getString("name")!!
         val color = call.getString("color")!!
 
-        val id = subjectDao.insert(Subject(0, name, color))
+        val id = try {
+            subjectDao.insert(Subject(0, name, color))
+        } catch (e: SQLiteConstraintException) {
+            call.reject("UNIQUE CONSTRAINT FAILED: subject name already exists", e)
+            return
+        }
 
         val ret = JSObject()
         ret.put("id", id)
@@ -76,10 +93,14 @@ class DatabasePlugin : Plugin() {
     @PluginMethod
     fun removeSubject(call: PluginCall) {
         val subjectDao = db.subjectDao()
+        val homeworkDao = db.homeworkDao()
+        val timetableDao = db.timetableDao()
 
         val id = call.getInt("id")!!
 
         subjectDao.deleteById(id)
+        homeworkDao.deleteBySubjectId(id)
+        timetableDao.clearAllWithSubjectId(id)
 
         call.resolve()
     }
@@ -231,6 +252,10 @@ class DatabasePlugin : Plugin() {
             timeInMillis = System.currentTimeMillis()
             set(Calendar.HOUR_OF_DAY, first)
             set(Calendar.MINUTE, second)
+
+            if (timeInMillis < System.currentTimeMillis()) {
+                add(Calendar.HOUR, 24)
+            }
         }
 
         DatabaseAlarm.start(context, time, interval)
@@ -305,6 +330,7 @@ class DatabasePlugin : Plugin() {
                     val writer = OutputStreamWriter(outputStream)
                     writer.write(content)
                     writer.close()
+                    notifyListeners("contentExported", null)
                 }
             }
         }

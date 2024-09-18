@@ -16,4 +16,7 @@ interface TimetableDao {
 
     @Query("DELETE FROM timetable WHERE id = :id")
     fun clear(id: Int)
+
+    @Query("DELETE FROM timetable WHERE subject_id = :id")
+    fun clearAllWithSubjectId(id: Int)
 }

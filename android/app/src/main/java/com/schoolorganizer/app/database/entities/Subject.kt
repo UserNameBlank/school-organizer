@@ -1,12 +1,19 @@
 package com.schoolorganizer.app.database.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.json.JSONObject
 
-@Entity(tableName = "subjects")
+@Entity(
+    tableName = "subjects",
+    indices = [
+        Index(value = ["name"], unique = true)
+    ]
+)
 class Subject(
-    @PrimaryKey(autoGenerate = true) val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
 
     val name: String,
     val color: String,

@@ -118,6 +118,10 @@ class DatabaseAlarm : BroadcastReceiver() {
                         timeInMillis = System.currentTimeMillis()
                         set(Calendar.HOUR_OF_DAY, first)
                         set(Calendar.MINUTE, second)
+
+                        if (timeInMillis < System.currentTimeMillis()) {
+                            add(Calendar.HOUR, 24)
+                        }
                     }
                 }
                 val interval = sharedPreferences.getLong("notification-interval", 86400000L)

@@ -49,13 +49,15 @@
 	function onSelectSubject(v: unknown) {
 		selectedSubject = (v as { value: Subject }).value;
 	}
+
+	$: days = $json('timetable.days') as string[];
 </script>
 
 <Drawer.Root bind:open={drawerOpen}>
 	<div class="flex min-w-[1200px] flex-col">
 		<div class="sticky top-0 z-10 h-min w-full border-b-[1px] border-accent bg-background pl-20">
 			<div class="flex flex-row justify-around p-4">
-				{#each $json('timetable.days') as day}
+				{#each days as day}
 					<p>{day}</p>
 				{/each}
 			</div>
@@ -64,15 +66,33 @@
 			<div
 				class="sticky start-0 flex h-full w-20 flex-col items-center gap-28 border-r-[1px] border-accent bg-background py-14"
 			>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">1</span> 7:50</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">2</span> 8:40</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">3</span> 9:40</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">4</span> 10:30</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">5</span> 11:30</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">6</span> 12:20</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">7</span> 13:10</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">8</span> 14:00</p>
-				<p class="text-sm text-accent-foreground"><span class="text-lg font-bold">9</span> 14:45</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">1</span> 7:50
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">2</span> 8:40
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">3</span> 9:40
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">4</span> 10:30
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">5</span> 11:30
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">6</span> 12:20
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">7</span> 13:10
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">8</span> 14:00
+				</p>
+				<p class="text-sm text-accent-foreground">
+					<span class="text-lg font-bold">9</span> 14:45
+				</p>
 				<p class="text-sm text-accent-foreground">
 					<span class="text-lg font-bold">10</span> 15:30
 				</p>
@@ -83,30 +103,30 @@
 					<span class="text-lg font-bold">12</span> 17:00
 				</p>
 			</div>
-			<div class="grid flex-1 grid-cols-5 grid-rows-12 gap-4 p-4">
+			<div class="tt-grid grid flex-1 grid-cols-5 grid-rows-12 gap-4 p-4">
 				{#if editMode}
 					{#each $timetable as subject, i}
 						{#if subject}
-							<div
+							<button
 								on:click={() => onEditSlot(i)}
-								class="flex items-center justify-center rounded-md bg-blue-500 bg-gray-500 text-xl font-semibold active:bg-accent"
+								class="flex items-center justify-center rounded-md bg-gray-500 text-xl font-semibold active:bg-accent"
 							>
 								{subject.name}
-							</div>
+							</button>
 						{:else}
-							<div
+							<button
 								on:click={() => setSlot(i)}
-								class="flex items-center justify-center rounded-md outline-dashed outline-[1px] outline-accent active:bg-accent"
+								class="dotted-outline flex items-center justify-center rounded-md active:bg-accent"
 							>
 								<Plus />
-							</div>
+							</button>
 						{/if}
 					{/each}
 				{:else}
 					{#each $timetable as subject}
 						{#if subject}
 							<div
-								class="flex items-center justify-center rounded-md bg-blue-500 text-xl font-semibold"
+								class="flex items-center justify-center rounded-md bg-blue-500 p-4 text-xl font-semibold"
 								style="background-color: {subject.color}"
 							>
 								{subject.name}
@@ -176,3 +196,9 @@
 		{$t('timetable.edit-label')}
 	</div>
 {/if}
+
+<style>
+	.dotted-outline {
+		outline: 2px dotted hsl(var(--accent));
+	}
+</style>

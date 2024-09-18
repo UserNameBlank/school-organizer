@@ -54,3 +54,23 @@ export const flyAndScale = (
 		easing: cubicOut
 	};
 };
+
+export function getTimeLabel(
+	date: number,
+	format: (_c: string, _o?: { values: { count: number } }) => string
+): string {
+	const millis = date - new Date().getTime();
+
+	if (millis > 864e5) {
+		const days = Math.floor(millis / 864e5);
+		return format('homework.card.times.days', { values: { count: days } });
+	} else if (millis > 36e5) {
+		const hours = Math.floor(millis / 36e5);
+		return format('homework.card.times.hours', { values: { count: hours } });
+	} else if (millis > 6e4) {
+		const minutes = Math.floor(millis / 6e4);
+		return format('homework.card.times.minutes', { values: { count: minutes } });
+	} else {
+		return format('homework.card.times.expired');
+	}
+}

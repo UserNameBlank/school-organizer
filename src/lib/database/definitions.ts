@@ -1,21 +1,15 @@
+import type { Homework } from '$lib/Homework';
 import type { Subject } from '$lib/Subject';
-
-interface HomeworkType {
-	id: number;
-	desc: string;
-	subjectId: number;
-	dueTo: number | null;
-	done: boolean;
-}
 
 export interface DatabasePlugin {
 	getSubjects(): Promise<{ subjects: Subject[] }>;
+	getSubjectsWithHomework(): Promise<{ subjects: Subject[] }>;
 	addSubject(subject: Subject): Promise<{ id: number }>;
 	removeSubject(options: { id: number }): Promise<void>;
 	editSubject(subject: Subject): Promise<void>;
 
-	getHomeworks(): Promise<{ homeworks: HomeworkType[] }>;
-	addHomework(homework: HomeworkType): Promise<{ id: number }>;
+	getHomeworks(): Promise<{ homeworks: Homework[] }>;
+	addHomework(homework: Homework): Promise<{ id: number }>;
 	removeHomework(options: { id: number }): Promise<void>;
 	removeOldHomework(): Promise<void>;
 	setHomeworkDone(options: { id: number; done: boolean }): Promise<void>;

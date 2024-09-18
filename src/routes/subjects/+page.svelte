@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SubjectCard from '$lib/components/SubjectCard.svelte';
+	import SubjectCard from './SubjectCard.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { dataService } from '$lib/database';
 	import * as Drawer from '$lib/components/ui/drawer';
@@ -11,8 +11,9 @@
 	import { Colorpicker } from '$lib/components/ui/colorpicker';
 
 	import { t } from 'svelte-i18n';
-	import { currentTab, homeworks, subjects } from '$lib/stores';
+	import { currentTab, subjects } from '$lib/stores';
 	import type { Subject } from '$lib/Subject';
+	import { toast } from 'svelte-sonner';
 
 	$: $currentTab = $t('titles.subjects');
 
@@ -39,7 +40,6 @@
 	let selectedName = 'Mathe';
 	let drawerOpen = false;
 	let editingSubject = false;
-	// let currentId: number | null = null;
 	let currentSubject: Subject | null = null;
 
 	function onChangeColor(event: { detail: { color: string } }) {
@@ -52,31 +52,39 @@
 	}
 
 	async function submittedNewSubject() {
-		drawerOpen = false;
-		const subject = { id: 0, name: selectedName, color: colors[selectedColor] };
-		const { id } = await dataService.addSubject(subject);
-		subject.id = id;
+		try {
+			const subject = { id: 0, name: selectedName, color: colors[selectedColor], homeworks: [] };
+			const { id } = await dataService.addSubject(subject);
+			subject.id = id;
 
-		subjects.update((map) => map.set(id, subject));
+			drawerOpen = false;
+
+			subjects.update((map) => map.set(id, subject));
+		} catch {
+			toast.error($t('subjects.name-already-exists', { values: { name: selectedName } }));
+		}
 	}
 
 	async function removeSubject() {
 		drawerOpen = false;
-		dataService.removeSubject({ id: currentSubject!.id });
+
+		const subj = structuredClone(currentSubject!);
+		toast($t('subjects.subject-removed', { values: { name: subj.name } }), {
+			action: {
+				label: $t('ui.undo'),
+				onClick: () => {
+					subjects.update((map) => {
+						map.set(subj.id, subj);
+						return map;
+					});
+				}
+			},
+			onAutoClose: () => dataService.removeSubject({ id: subj.id }),
+			onDismiss: () => dataService.removeSubject({ id: subj.id })
+		});
 
 		subjects.update((map) => {
 			map.delete(currentSubject!.id);
-			return map;
-		});
-		homeworks.update((map) => {
-			// list.filter((it) => it.subject_id !== currentId!);
-
-			Array.from(map)
-				.filter(([_key, val]) => val.subjectId === currentSubject!.id)
-				.forEach(([key, _val]) => {
-					map.delete(key);
-				});
-
 			return map;
 		});
 	}
@@ -127,7 +135,7 @@
 			</Drawer.Trigger>
 		</div>
 	{:else}
-		<div class="flex flex-col gap-4 p-4">
+		<div class="grid gap-4 p-4">
 			{#each $subjects.values() as subject (subject.id)}
 				<SubjectCard
 					id={subject.id}
@@ -149,25 +157,6 @@
 	{/if}
 
 	<Drawer.Content>
-		<!-- {#if editingSubject} -->
-		<!-- 	<Drawer.Header> -->
-		<!-- 		<Drawer.Title>Fach bearbeiten</Drawer.Title> -->
-		<!-- 		<!-- <Drawer.Description>Dies wird alle Hausaufgaben in diesem Fach löschen.</Drawer.Description> -->
-		<!-- 	</Drawer.Header> -->
-		<!-- 	<div class="grid items-start gap-4 px-4"> -->
-		<!-- 		<div class="grid gap-2"> -->
-		<!-- 			<Label for="name">Name</Label> -->
-		<!-- 			<Input autocomplete="off" type="text" id="name" bind:value={selectedName} /> -->
-		<!-- 		</div> -->
-		<!-- 	</div> -->
-		<!-- 	<Drawer.Footer> -->
-		<!-- 		<Button>Speichern</Button> -->
-		<!-- 		<Drawer.Close asChild let:builder> -->
-		<!-- 			<Button variant="outline" builders={[builder]}>Abbrechen</Button> -->
-		<!-- 		</Drawer.Close> -->
-		<!-- 		<Button variant="destructive" on:click={removeSubject}>Löschen</Button> -->
-		<!-- 	</Drawer.Footer> -->
-		<!-- {:else} -->
 		<Drawer.Header>
 			{#if editingSubject}
 				<Drawer.Title>{$t('subjects.drawer.edit-subjects.title')}</Drawer.Title>
@@ -176,7 +165,7 @@
 			{/if}
 		</Drawer.Header>
 		<Popover.Root>
-			<form class="mb-10 grid items-start gap-4 px-4" on:submit|preventDefault={onSubmit}>
+			<form class="mb-1 grid items-start gap-4 px-4" on:submit|preventDefault={onSubmit}>
 				<div class="grid gap-2">
 					<Label for="name">{$t('subjects.drawer.name-label')}</Label>
 					<Input autocomplete="off" type="text" id="name" bind:value={selectedName} />
@@ -184,12 +173,13 @@
 				<Label class="mt-6">{$t('subjects.drawer.color-label')}</Label>
 				<div class="flex flex-wrap gap-2 p-2">
 					{#each colors as color, index (index)}
-						<div
+						<button
 							style="background-color: {color};"
-							class="aspect-square w-10 rounded-full border-0 border-background border-foreground"
+							class="aspect-square w-10 rounded-full border-0 border-foreground"
 							class:selected={index === selectedColor}
+							type="button"
 							on:click={() => (selectedColor = index)}
-						></div>
+						></button>
 					{/each}
 					<Popover.Trigger asChild let:builder>
 						<Button
@@ -219,7 +209,6 @@
 				</Drawer.Close>
 			{/if}
 		</Drawer.Footer>
-		<!-- {/if} -->
 	</Drawer.Content>
 </Drawer.Root>
 

@@ -11,9 +11,9 @@
 	} from 'lucide-svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { t, locale } from 'svelte-i18n';
-	import { subjects, homeworks, timetable, currentTab as globalCurrentTab } from '$lib/stores';
+	import { subjects, timetable, currentTab as globalCurrentTab } from '$lib/stores';
 	import timetabletimes from '$lib/timetabletimes';
-	import HomeworkCard from '$lib/components/HomeworkCard.svelte';
+	import HomeworkCard from './HomeworkCard.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
@@ -43,32 +43,13 @@
 	};
 	const addCounter = () => untilCounter++;
 
-	$: homeworksArray = Array.from($homeworks).map(([_key, val]) => val);
-
-	$: withHomeworkIds = homeworksArray.map((val) => val.subjectId);
 	$: firstHalf = Array.from($subjects)
 		.map(([_key, val]) => val)
-		.filter((it) => withHomeworkIds.includes(it.id));
+		.filter((it) => it.homeworks.length != 0)
+		.sort((a, b) => (a.homeworks[0].dueTo ?? Infinity) - (b.homeworks[0].dueTo ?? Infinity));
 	$: secondHalf = Array.from($subjects)
 		.map(([_key, val]) => val)
-		.filter((it) => !withHomeworkIds.includes(it.id));
-
-	function getHomeworksBySubjectId(id: number) {
-		return homeworksArray.filter((it) => it.subjectId === id);
-	}
-
-	// function orderSubjects(homeworks: Homework[]) {
-	// 	const ids = homeworks.map((it) => it.subject_id);
-	//
-	// 	$subjects.sort((a, b) => {
-	// 		const isFirst = ids.includes(a.id) ? 1 : 0;
-	// 		const isSecond = ids.includes(b.id) ? 1 : 0;
-	//
-	// 		return isSecond - isFirst;
-	// 	});
-	// }
-	//
-	// $: orderSubjects($homeworks);
+		.filter((it) => it.homeworks.length == 0);
 
 	function onAddHomework(event: { detail: { id: number } }) {
 		editHomework = false;
@@ -86,17 +67,20 @@
 		drawerOpen = true;
 	}
 
-	function removeHomework(id: number) {
-		currentHomeworks = currentHomeworks.filter((it) => it.id !== id);
-		dataService.removeHomework({ id });
+	function removeHomework(hw: Homework) {
+		currentHomeworks = currentHomeworks.filter((it) => it.id !== hw.id);
+		dataService.removeHomework({ id: hw.id });
 
-		console.log(currentHomeworks);
-
-		homeworks.update((map) => {
-			map.delete(id);
+		// homeworks.update((map) => {
+		// 	map.delete(id);
+		// 	return map;
+		// });
+		subjects.update((map) => {
+			let sub = map.get(hw.subjectId)!;
+			sub.homeworks = currentHomeworks;
+			map.set(sub.id, sub);
 			return map;
 		});
-		subjects.update((map) => map);
 	}
 
 	function getDueDate(): Date | null {
@@ -172,17 +156,20 @@
 			id: 0,
 			subjectId: currentId,
 			desc: currentDesc,
-			dueTo: date,
+			dueTo: date?.getTime() ?? null,
 			done: false
 		};
-		const { id } = await dataService.addHomework({ ...homework, dueTo: date?.getTime() ?? null });
+		const { id } = await dataService.addHomework(homework);
 		homework.id = id;
 
 		currentDesc = '';
 
 		// homeworks.update((list) => [...list, homework]);
-		homeworks.update((map) => map.set(id, homework));
-		subjects.update((map) => map);
+		// homeworks.update((map) => map.set(id, homework));
+		subjects.update((map) => {
+			map.get(homework.subjectId)!.homeworks.push(homework);
+			return map;
+		});
 	}
 </script>
 
@@ -204,13 +191,13 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex flex-col gap-4 p-4">
+		<div class="grid gap-4 p-4">
 			{#each firstHalf as subject (subject.id)}
 				<HomeworkCard
 					id={subject.id}
 					name={subject.name}
 					color={subject.color}
-					homeworks={getHomeworksBySubjectId(subject.id)}
+					homeworks={subject.homeworks}
 					on:addHomework={onAddHomework}
 					on:editHomework={onEditHomework}
 				/>
@@ -220,7 +207,7 @@
 					id={subject.id}
 					name={subject.name}
 					color={subject.color}
-					homeworks={getHomeworksBySubjectId(subject.id)}
+					homeworks={subject.homeworks}
 					on:addHomework={onAddHomework}
 					on:editHomework={onEditHomework}
 				/>
@@ -247,7 +234,7 @@
 				{#each currentHomeworks as homework (homework.id)}
 					<li transition:fly={{ duration: 300, x: -300 }} class="flex w-full items-center text-lg">
 						<span class="flex-1">{homework.desc}</span>
-						<Button variant="outline" size="icon" on:click={() => removeHomework(homework.id)}
+						<Button variant="outline" size="icon" on:click={() => removeHomework(homework)}
 							><Trash size={20} /></Button
 						>
 					</li>

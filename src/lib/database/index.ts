@@ -1,71 +1,32 @@
 import { registerPlugin } from '@capacitor/core';
 import type { DatabasePlugin } from './definitions';
-import { homeworks, subjects, timetable } from '$lib/stores';
+import { subjects, timetable } from '$lib/stores';
 import type { Subject } from '$lib/Subject';
-import type { Homework } from '$lib/Homework';
 import { get } from 'svelte/store';
 
-const Database = registerPlugin<DatabasePlugin>('Database');
-
-// class DatabaseService {
-// 	async init() {}
-//
-// 	async getSubjects(): Promise<Subject[]> {
-// 		return null as any;
-// 	}
-//
-// 	async addSubject(subject: Subject): Promise<number> {
-// 		return null as any;
-// 	}
-//
-// 	async removeSubject(id: number) {}
-//
-// 	async editSubject(subject: Subject) {}
-//
-// 	async getHomeworks(): Promise<Homework[]> {
-// 		return null as any;
-// 	}
-//
-// 	async addHomework(homework: Homework): Promise<number> {
-// 		return null as any;
-// 	}
-//
-// 	async removeHomework(id: number) {}
-//
-// 	async removeOldHomework() {}
-//
-// 	async setHomeworkDone(id: number, done: boolean) {}
-//
-// 	async setSlot(slot: number, subject_id: number) {}
-//
-// 	async getSlots(): Promise<{ slot: number; subject_id: number }[]> {
-// 		return null as any;
-// 	}
-//
-// 	async clearSlot(slot: number) {}
-//
-// 	async saveToStore() {}
-// }
+const Database = registerPlugin<DatabasePlugin>('Database', {
+	web: () => import('./web').then((m) => new m.DatabaseWeb())
+});
 
 export async function loadStores() {
 	subjects.set(new Map());
-	homeworks.set(new Map());
 	timetable.set(new Array(12 * 5));
 
-	const subs = (await Database.getSubjects()).subjects;
+	await Database.removeOldHomework();
+
+	const subs = (await Database.getSubjectsWithHomework()).subjects;
 	subjects.set(
 		subs.reduce((map, sub) => {
 			return map.set(sub.id, sub);
 		}, new Map<number, Subject>())
 	);
 
-	// await Database.removeOldHomework();
-	const hws = (await Database.getHomeworks()).homeworks;
-	homeworks.set(
-		hws.reduce((map, hw) => {
-			return map.set(hw.id, { ...hw, dueTo: hw.dueTo ? new Date(hw.dueTo) : null });
-		}, new Map<number, Homework>())
-	);
+	// const hws = (await Database.getHomeworks()).homeworks;
+	// homeworks.set(
+	// 	hws.reduce((map, hw) => {
+	// 		return map.set(hw.id, { ...hw, dueTo: hw.dueTo ? new Date(hw.dueTo) : null });
+	// 	}, new Map<number, Homework>())
+	// );
 
 	const slots = (await Database.getTimetableSlots()).slots;
 

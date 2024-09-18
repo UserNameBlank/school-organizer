@@ -10,7 +10,8 @@
 		"cancel": "Abbrechen",
 		"save": "Speichern",
 		"delete": "Löschen",
-		"add": "Hinzufügen"
+		"add": "Hinzufügen",
+		"undo": "Rückgängig"
 	},
 	"home": {
 		"homework-label": {
@@ -28,6 +29,8 @@
 	"subjects": {
 		"no-subjects": "Du hast noch kein Fach hinzugefügt.",
 		"new-subject": "Neues Fach",
+		"name-already-exists": "{name} existiert bereits.",
+		"subject-removed": "{name} gelöscht.",
 		"drawer": {
 			"edit-subjects": {
 				"title": "Fach bearbeiten"
@@ -88,8 +91,17 @@
 	"settings": {
 		"import-content": "Importiere Fächer und Stundenplan",
 		"export-content": "Exportiere Fächer und Stundenplan",
+		"content-imported": "Einträge erfolgreich importiert",
+		"content-exported": "Einträge erfolgreich exportiert",
 		"save-to-webstore": "in Webstore speichern",
 		"language": "Sprache",
+		"general": "Allgemein",
+		"theme-label": "Farbmodus",
+		"themes": {
+			"system": "System",
+			"dark": "Dunkel",
+			"light": "Hell"
+		},
 
 		"notifications-label": "Benachrichtigungen",
 		"notifications": {

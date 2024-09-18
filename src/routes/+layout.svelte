@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import '$lib/ripple/ripple.css';
 
 	import * as Sheet from '$lib/components/ui/sheet';
 
@@ -7,14 +8,11 @@
 	import { t } from 'svelte-i18n';
 
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
-	// import { Capacitor } from '@capacitor/core';
 
 	import { loadStores } from '$lib/database';
 
-	// import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
 	import { currentTab } from '$lib/stores';
-
-	// const platform = Capacitor.getPlatform();
+	import { Toaster } from '$lib/components/ui/sonner';
 
 	async function initData() {
 		console.log('Data is being initialized...');
@@ -23,30 +21,14 @@
 	}
 
 	initData();
-	// if (typeof window !== 'undefined') {
-	// 	jeepSqlite(window);
-	//
-	// 	if (platform === 'web') {
-	// 		const jeepEl = document.createElement('jeep-sqlite');
-	// 		document.body.appendChild(jeepEl);
-	// 		customElements.whenDefined('jeep-sqlite').then(async () => await initData());
-	// 	} else {
-	// 		initData();
-	// 	}
-	// } else {
-	// 	initData();
-	// }
 
 	let open = false;
 
 	let close = () => (open = false);
-	// $: currentTab = $t('titles.home');
 
 	function link(node: HTMLAnchorElement) {
 		function onClick() {
 			close();
-
-			// currentTab = node.textContent as string;
 		}
 
 		node.addEventListener('click', onClick);
@@ -63,7 +45,10 @@
 
 <svelte:head>
 	<title>School Organizer</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 </svelte:head>
+
+<Toaster />
 
 <Sheet.Root bind:open>
 	<div class="flex h-screen w-full flex-col">

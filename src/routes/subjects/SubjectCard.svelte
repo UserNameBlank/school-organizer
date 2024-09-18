@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { createEventDispatcher } from 'svelte';
+	import { ripple } from '$lib/ripple';
 	import { slide } from 'svelte/transition';
 
 	const dispatch = createEventDispatcher();
@@ -14,10 +15,11 @@
 	}
 </script>
 
-<div
+<button
 	transition:slide
 	on:contextmenu|preventDefault={onEdit}
-	class="transition delay-200 active:scale-95"
+	class="rounded-md text-start transition delay-200 active:scale-95"
+	use:ripple={{ inEvents: ['contextmenu'] }}
 >
 	<Card.Root>
 		<Card.Header class="flex flex-row items-center">
@@ -28,4 +30,4 @@
 			></div>
 		</Card.Header>
 	</Card.Root>
-</div>
+</button>
