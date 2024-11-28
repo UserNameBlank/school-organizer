@@ -15,11 +15,13 @@ class Preferences(
         private var INSTANCE: Preferences? = null
 
         fun getInstance(context: Context): SharedPreferences {
-            if (INSTANCE == null) {
-                INSTANCE = Preferences(context)
-            }
+            synchronized(this) {
+                if (INSTANCE == null) {
+                    INSTANCE = Preferences(context)
+                }
 
-            return INSTANCE!!.sharedPreferences
+                return INSTANCE!!.sharedPreferences
+            }
         }
     }
 

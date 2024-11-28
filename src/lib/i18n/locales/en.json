@@ -23,6 +23,9 @@
 			"other": "{count} homework... 💀"
 		},
 		"homework-next": "the next homework",
+		"homework-for-tomorrow": "homework for tomorrow",
+		"homework-for-today": "homework for today",
+		"next-lesson": "next lesson",
 		"goto-homeworks": "Goto homeworks",
 		"goto-timetable": "Goto timetable"
 	},
@@ -59,12 +62,14 @@
 					"manual": "Date"
 				},
 				"lessons-label": "up to {count, plural, one {the next lesson} other {# lessons}}",
-				"pick-date": "Select date"
+				"pick-date": "Select date",
+				"pick-image": "Add image"
 			}
 		},
 		"card": {
 			"no-homework": "no homework",
 			"times": {
+				"tomorrow": "tomorrow",
 				"days": "{count, plural, one {# day} other {# days}} left",
 				"hours": "{count, plural, one {# hour} other {# hours}} left",
 				"minutes": "{count, plural, one {# minute} other {# minutes}} left",

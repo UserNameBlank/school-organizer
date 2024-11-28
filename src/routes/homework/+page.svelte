@@ -4,10 +4,11 @@
 		ArrowBigRightDash,
 		Layers,
 		Plus,
-		Trash,
+		PlusCircle,
 		ChevronRight,
 		ChevronLeft,
-		CalendarIcon
+		CalendarIcon,
+		X
 	} from 'lucide-svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { t, locale } from 'svelte-i18n';
@@ -22,14 +23,19 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import { dataService } from '$lib/database';
 	import type { Homework } from '$lib/Homework';
-	import { fly } from 'svelte/transition';
 	import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import HomeworkListItem from './HomeworkListItem.svelte';
+	import { ImageViewer } from 'svelte-image-viewer';
 
 	$: $globalCurrentTab = $t('titles.homework');
 
 	let drawerOpen = false;
 	let currentId: number | null = null;
 	let currentDesc = '';
+	let currentImage: {
+		data: string;
+		uri: string;
+	} | null = null;
 	let editHomework = false;
 	let currentHomeworks: Homework[] = [];
 	let untilCounter = 1;
@@ -56,6 +62,7 @@
 		currentId = event.detail.id;
 		untilCounter = 1;
 		currentDate = undefined;
+		currentImage = null;
 		currentTab = 'automatic';
 		drawerOpen = true;
 	}
@@ -71,10 +78,6 @@
 		currentHomeworks = currentHomeworks.filter((it) => it.id !== hw.id);
 		dataService.removeHomework({ id: hw.id });
 
-		// homeworks.update((map) => {
-		// 	map.delete(id);
-		// 	return map;
-		// });
 		subjects.update((map) => {
 			let sub = map.get(hw.subjectId)!;
 			sub.homeworks = currentHomeworks;
@@ -108,31 +111,12 @@
 					}
 
 					date.setDate(date.getDate() + wd + 1);
-					date.setHours(timetabletimes[lh * 2], timetabletimes[lh * 2 + 1], 0, 0);
+					const time = timetabletimes[lh];
+					date.setHours(time[0], time[1], 0, 0);
 					return date;
 				}
 			}
 		}
-
-		// for (let wd = 0; wd < 5 * until; wd++) {
-		// 	const k = wd + day;
-		//
-		// 	for (let lh = 0; lh < 12; lh++) {
-		// 		const slot = lh * 5 + (k % 5);
-		//
-		// 		const slotId = $timetable[slot]?.id;
-		// 		if (slotId !== null && slotId === currentId) {
-		// 			if (untilCounter > 1) {
-		// 				untilCounter--;
-		// 				continue;
-		// 			}
-		//
-		// 			date.setDate(date.getDate() + wd + Math.floor(k / 5) * 2);
-		// 			date.setHours(timetabletimes[lh * 2], timetabletimes[lh * 2 + 1], 0, 0);
-		// 			return date;
-		// 		}
-		// 	}
-		// }
 
 		return null;
 	}
@@ -152,26 +136,57 @@
 			date = getDueDate();
 		}
 
-		const homework = {
+		const homework: Homework = {
 			id: 0,
 			subjectId: currentId,
 			desc: currentDesc,
 			dueTo: date?.getTime() ?? null,
-			done: false
+			done: false,
+			image: currentImage?.uri ?? null
 		};
-		const { id } = await dataService.addHomework(homework);
+		const { id, image } = await dataService.addHomework(homework);
 		homework.id = id;
+		homework.image = image;
 
 		currentDesc = '';
 
-		// homeworks.update((list) => [...list, homework]);
-		// homeworks.update((map) => map.set(id, homework));
 		subjects.update((map) => {
 			map.get(homework.subjectId)!.homeworks.push(homework);
 			return map;
 		});
 	}
+
+	async function pickImage() {
+		currentImage = await dataService.pickImage();
+	}
+
+	let showingImage = false;
+	let imageToShow: string | null = null;
+
+	function showImage(e: CustomEvent<{ image: string }>) {
+		imageToShow = e.detail.image;
+		showingImage = true;
+	}
+
+	function closeImage() {
+		showingImage = false;
+		imageToShow = null;
+	}
 </script>
+
+{#if showingImage && imageToShow !== null}
+	<div class="absolute bottom-0 left-0 right-0 top-0 z-[55] bg-black/30 backdrop-blur-sm">
+		<ImageViewer src={imageToShow} />
+	</div>
+	<Button
+		on:click={closeImage}
+		variant="ghost"
+		size="icon"
+		class="absolute right-4 top-4 z-[56] h-20 w-20 rounded-full"
+	>
+		<X size={40} />
+	</Button>
+{/if}
 
 <Drawer.Root bind:open={drawerOpen}>
 	{#if $subjects.size === 0}
@@ -191,7 +206,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid gap-4 p-4">
+		<div class="flex flex-col gap-4 p-4">
 			{#each firstHalf as subject (subject.id)}
 				<HomeworkCard
 					id={subject.id}
@@ -200,6 +215,7 @@
 					homeworks={subject.homeworks}
 					on:addHomework={onAddHomework}
 					on:editHomework={onEditHomework}
+					on:showImage={showImage}
 				/>
 			{/each}
 			{#each secondHalf as subject (subject.id)}
@@ -209,20 +225,8 @@
 					color={subject.color}
 					homeworks={subject.homeworks}
 					on:addHomework={onAddHomework}
-					on:editHomework={onEditHomework}
 				/>
 			{/each}
-
-			<!-- {#each $subjects.values() as subject (subject.id)} -->
-			<!-- 	<HomeworkCard -->
-			<!-- 		id={subject.id} -->
-			<!-- 		name={subject.name} -->
-			<!-- 		color={subject.color} -->
-			<!-- 		homeworks={getHomeworksBySubjectId(subject.id)} -->
-			<!-- 		on:addHomework={onAddHomework} -->
-			<!-- 		on:editHomework={onEditHomework} -->
-			<!-- 	/> -->
-			<!-- {/each} -->
 		</div>
 	{/if}
 	<Drawer.Content>
@@ -230,16 +234,11 @@
 			<Drawer.Header>
 				<Drawer.Title>{$t('homework.drawer.edit-homework.title')}</Drawer.Title>
 			</Drawer.Header>
-			<ul class="mt-10 flex w-full flex-col gap-4 px-4 pl-10">
+			<div class="mt-10 grid w-full gap-4 px-4">
 				{#each currentHomeworks as homework (homework.id)}
-					<li transition:fly={{ duration: 300, x: -300 }} class="flex w-full items-center text-lg">
-						<span class="flex-1">{homework.desc}</span>
-						<Button variant="outline" size="icon" on:click={() => removeHomework(homework)}
-							><Trash size={20} /></Button
-						>
-					</li>
+					<HomeworkListItem {homework} on:remove={(e) => removeHomework(e.detail.homework)} />
 				{/each}
-			</ul>
+			</div>
 			<Drawer.Footer class="mt-10 pt-2">
 				<Drawer.Close asChild let:builder>
 					<Button variant="outline" builders={[builder]}>{$t('ui.cancel')}</Button>
@@ -253,6 +252,23 @@
 				<div class="grid gap-2">
 					<Label for="name">{$t('homework.drawer.add-homework.desc-label')}</Label>
 					<Input autocomplete="off" type="text" id="name" bind:value={currentDesc} />
+
+					{#if currentImage == null}
+						<Button variant="secondary" class="mt-2" on:click={pickImage}>
+							<PlusCircle class="mr-2" />
+							{$t('homework.drawer.add-homework.pick-image')}
+						</Button>
+					{:else}
+						<div class="flex items-center justify-center">
+							<div class="h-44">
+								<img
+									src={currentImage.data}
+									alt="Homework"
+									class="h-full w-full rounded-md object-cover"
+								/>
+							</div>
+						</div>
+					{/if}
 				</div>
 				<Tabs.Root bind:value={currentTab}>
 					<Tabs.List class="grid w-full grid-cols-2">

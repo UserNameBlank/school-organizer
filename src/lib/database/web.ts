@@ -4,6 +4,14 @@ import type { DatabasePlugin } from './definitions';
 import type { Homework } from '$lib/Homework';
 import type { Subject } from '$lib/Subject';
 
+function bufferToBase64(buffer: ArrayBuffer) {
+	return btoa(
+		new Uint8Array(buffer).reduce((data, byte) => {
+			return data + String.fromCharCode(byte);
+		}, '')
+	);
+}
+
 /// A Debug-Implementation of the DatabasePlugin on Web
 export class DatabaseWeb extends WebPlugin implements DatabasePlugin {
 	idCounter: number = 0;
@@ -48,69 +56,78 @@ export class DatabaseWeb extends WebPlugin implements DatabasePlugin {
 		return this.getSubjectsWithHomework();
 	}
 
-	getSubjectsWithHomework(): Promise<{ subjects: Subject[] }> {
-		return new Promise((resolve) =>
-			resolve({
-				subjects: Array.from(this.subjects).map(([_key, val]) => val)
-			})
-		);
+	async getSubjectsWithHomework(): Promise<{ subjects: Subject[] }> {
+		return {
+			subjects: Array.from(this.subjects).map(([_key, val]) => val)
+		};
 	}
 
-	addSubject(subject: Subject): Promise<{ id: number }> {
+	async addSubject(subject: Subject): Promise<{ id: number }> {
+		subject.id = this.idCounter++;
+		this.subjects.set(subject.id, subject);
+		return { id: subject.id };
+	}
+
+	async removeSubject(options: { id: number }): Promise<void> {
+		this.subjects.delete(options.id);
+	}
+
+	async editSubject(subject: Subject): Promise<void> {
+		this.subjects.set(subject.id, subject);
+	}
+
+	pickImage(): Promise<{ data: string; uri: string }> {
 		return new Promise((resolve) => {
-			subject.id = this.idCounter++;
-			this.subjects.set(subject.id, subject);
-			resolve({ id: subject.id });
+			const input = document.createElement('input');
+			input.type = 'file';
+			input.accept = 'image/*';
+
+			input.onchange = (e) => {
+				const target = e.target as HTMLInputElement;
+				const file = target.files?.[0];
+
+				if (file) {
+					const reader = new FileReader();
+					reader.readAsArrayBuffer(file);
+
+					reader.onload = async (readerEvent) => {
+						const content = readerEvent.target?.result as ArrayBuffer;
+						const data = 'data:image/jpeg;base64,' + bufferToBase64(content);
+						const uri = URL.createObjectURL(file);
+						resolve({ data, uri });
+					};
+				}
+
+				input.remove();
+			};
+
+			input.click();
 		});
 	}
 
-	removeSubject(options: { id: number }): Promise<void> {
-		return new Promise((resolve) => {
-			this.subjects.delete(options.id);
-			resolve();
+	async getHomeworks(): Promise<{ homeworks: Homework[] }> {
+		return {
+			homeworks: Array.from(this.subjects)
+				.map(([_key, val]) => val.homeworks)
+				.flat()
+		};
+	}
+
+	async addHomework(homework: Homework): Promise<{ id: number; image: string }> {
+		return { id: this.idCounter++, image: homework.image as string };
+	}
+
+	async removeHomework(options: { id: number }): Promise<void> {
+		this.subjects.forEach((subj) => {
+			subj.homeworks = subj.homeworks.filter((hw) => hw.id !== options.id);
 		});
 	}
 
-	editSubject(subject: Subject): Promise<void> {
-		return new Promise((resolve) => {
-			this.subjects.set(subject.id, subject);
-			resolve();
-		});
-	}
-
-	getHomeworks(): Promise<{ homeworks: Homework[] }> {
-		return new Promise((resolve) =>
-			resolve({
-				homeworks: Array.from(this.subjects)
-					.map(([_key, val]) => val.homeworks)
-					.flat()
-			})
-		);
-	}
-
-	addHomework(_homework: Homework): Promise<{ id: number }> {
-		return new Promise((resolve) => {
-			resolve({ id: this.idCounter++ });
-		});
-	}
-
-	removeHomework(options: { id: number }): Promise<void> {
-		return new Promise((resolve) => {
-			this.subjects.forEach((subj) => {
-				subj.homeworks = subj.homeworks.filter((hw) => hw.id !== options.id);
-			});
-			resolve();
-		});
-	}
-
-	removeOldHomework(): Promise<void> {
-		return new Promise((resolve) => {
-			this.subjects.forEach((subj) => {
-				subj.homeworks = subj.homeworks.filter(
-					(hw) => !(hw.done && (hw.dueTo ?? Infinity) < Date.now())
-				);
-			});
-			resolve();
+	async removeOldHomework(): Promise<void> {
+		this.subjects.forEach((subj) => {
+			subj.homeworks = subj.homeworks.filter(
+				(hw) => !(hw.done && (hw.dueTo ?? Infinity) < Date.now())
+			);
 		});
 	}
 
@@ -127,26 +144,18 @@ export class DatabaseWeb extends WebPlugin implements DatabasePlugin {
 		return Promise.resolve();
 	}
 
-	setTimetableSlot(options: { id: number; subjectId: number }): Promise<void> {
-		return new Promise((resolve) => {
-			this.timetable[options.id] = options.subjectId;
-			resolve();
-		});
+	async setTimetableSlot(options: { id: number; subjectId: number }): Promise<void> {
+		this.timetable[options.id] = options.subjectId;
 	}
 
-	getTimetableSlots(): Promise<{ slots: { id: number; subjectId: number }[] }> {
-		return new Promise((resolve) => {
-			resolve({
-				slots: this.timetable.filter((val) => val != null).map((s, i) => ({ id: i, subjectId: s }))
-			});
-		});
+	async getTimetableSlots(): Promise<{ slots: { id: number; subjectId: number }[] }> {
+		return {
+			slots: this.timetable.filter((val) => val != null).map((s, i) => ({ id: i, subjectId: s }))
+		};
 	}
 
-	clearTimetableSlot(options: { id: number }): Promise<void> {
-		return new Promise((resolve) => {
-			this.timetable[options.id] = null;
-			resolve();
-		});
+	async clearTimetableSlot(options: { id: number }): Promise<void> {
+		this.timetable[options.id] = null;
 	}
 
 	setNotificationOptions(_options: {
@@ -157,80 +166,74 @@ export class DatabaseWeb extends WebPlugin implements DatabasePlugin {
 		throw new Error('Method not implemented.');
 	}
 
-	exportContent(): Promise<void> {
-		return (async () => {
-			const obj = {
-				subjects: Array.from(this.subjects).map(([_key, val]) => val),
-				timetable: this.timetable
-			};
+	async exportContent(): Promise<void> {
+		const obj = {
+			subjects: Array.from(this.subjects).map(([_key, val]) => val),
+			timetable: this.timetable
+		};
 
-			const content = JSON.stringify(obj, null, 2);
-			const blob = new Blob([content], { type: 'application/json' });
+		const content = JSON.stringify(obj, null, 2);
+		const blob = new Blob([content], { type: 'application/json' });
 
+		// @ts-expect-error
+		if (window.showSaveFilePicker) {
 			// @ts-expect-error
-			if (window.showSaveFilePicker) {
-				// @ts-expect-error
-				const handler = await window.showSaveFilePicker({
-					suggestedName: 'content.json',
-					types: [
-						{
-							description: 'json file',
-							accept: { 'text/plain': ['.json'] }
-						}
-					]
-				});
-				await handler.createWritable().write([blob]);
-			} else {
-				let url = URL.createObjectURL(blob);
-				let anchor = document.createElement('a');
-				anchor.href = url;
-				anchor.download = 'content.json';
-				anchor.click();
-				URL.revokeObjectURL(url);
-				anchor.remove();
-			}
-		})();
+			const handler = await window.showSaveFilePicker({
+				suggestedName: 'content.json',
+				types: [
+					{
+						description: 'json file',
+						accept: { 'text/plain': ['.json'] }
+					}
+				]
+			});
+			await handler.createWritable().write([blob]);
+		} else {
+			let url = URL.createObjectURL(blob);
+			let anchor = document.createElement('a');
+			anchor.href = url;
+			anchor.download = 'content.json';
+			anchor.click();
+			URL.revokeObjectURL(url);
+			anchor.remove();
+		}
 	}
 
-	importContent(): Promise<void> {
-		return new Promise((resolve) => {
-			const input = document.createElement('input');
-			input.type = 'file';
-			input.accept = '.json';
+	async importContent(): Promise<void> {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.json';
 
-			input.onchange = (e) => {
-				const target = e.target as HTMLInputElement;
-				const file = target.files?.[0];
+		input.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			const file = target.files?.[0];
 
-				if (file) {
-					const reader = new FileReader();
-					reader.readAsText(file, 'UTF-8');
+			if (file) {
+				const reader = new FileReader();
+				reader.readAsText(file, 'UTF-8');
 
-					reader.onload = async (readerEvent) => {
-						const content = readerEvent.target?.result as string;
-						const json = JSON.parse(content);
+				reader.onload = async (readerEvent) => {
+					const content = readerEvent.target?.result as string;
+					const json = JSON.parse(content);
 
-						const subjects = json.subjects as Subject[];
-						const subjMap = new Map<number, number>();
-						for (const subj of subjects) {
-							const oldId = subj.id;
-							const { id } = await this.addSubject({ ...subj, homeworks: [] });
-							subjMap.set(oldId, id);
-						}
+					const subjects = json.subjects as Subject[];
+					const subjMap = new Map<number, number>();
+					for (const subj of subjects) {
+						const oldId = subj.id;
+						const { id } = await this.addSubject({ ...subj, homeworks: [] });
+						subjMap.set(oldId, id);
+					}
 
-						const timetable = json.timetable as (number | null)[];
-						this.timetable = timetable.map((id) => (id ? subjMap.get(id)!! : null));
+					const timetable = json.timetable as (number | null)[];
+					this.timetable = timetable.map((id) => (id ? subjMap.get(id)!! : null));
 
-						this.notifyListeners('contentImported', null);
-					};
-				}
+					this.notifyListeners('contentImported', null);
+				};
+			}
 
-				input.remove();
-			};
+			input.remove();
+		};
 
-			input.click();
-
-			resolve();
-		});
+		input.click();
 	}
 }

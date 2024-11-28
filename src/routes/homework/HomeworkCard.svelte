@@ -41,11 +41,15 @@
 		});
 	}
 
-	// $: allSame = homeworks.every((it) => it.due_to == homeworks[0].due_to);
+	function showImage(image: string | null) {
+		dispatch('showImage', { image });
+	}
+
+	$: allSame = homeworks.every((it) => it.dueTo == homeworks[0].dueTo);
 </script>
 
 <button
-	class="relative rounded-md border-b-2 p-8 text-start outline-none outline-1 outline-accent-foreground transition active:scale-95 dark:outline-accent"
+	class="relative rounded-md border-b-2 p-8 text-start outline-none outline-1 outline-accent-foreground dark:outline-accent"
 	style="border-bottom-color: {color};"
 	on:click={onClick}
 	on:contextmenu|preventDefault={onContextMenu}
@@ -64,7 +68,7 @@
 	{:else}
 		<div class="flex items-center">
 			<h3 class="flex-1 scroll-m-20 text-xl font-semibold tracking-tight">{name}</h3>
-			{#if homeworks[0].dueTo && homeworks.length === 1}
+			{#if allSame && homeworks[0].dueTo}
 				<p>{getTimeLabel(homeworks[0].dueTo, $t)}</p>
 			{/if}
 		</div>
@@ -75,7 +79,7 @@
 						{homework.desc}
 
 						<div class="flex flex-1 items-center justify-end text-end">
-							{#if homeworks.length !== 1 && homework.dueTo}
+							{#if !allSame && homework.dueTo}
 								<span class="mr-4">{getTimeLabel(homework.dueTo, $t)}</span>
 							{/if}
 						</div>
@@ -87,6 +91,14 @@
 							></Checkbox>
 						</div>
 					</div>
+					{#if !homework.done && homework.image}
+						<button
+							class="m-2 w-36 transition active:scale-95"
+							on:click|stopPropagation={() => showImage(homework.image)}
+						>
+							<img class="rounded-md" src={homework.image} alt="homework" />
+						</button>
+					{/if}
 				</li>
 			{/each}
 		</ul>

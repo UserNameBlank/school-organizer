@@ -1,19 +1,65 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { currentTab, subjects } from '$lib/stores';
-	import { getTimeLabel } from '$lib/utils';
+	import { currentTab, subjects, timetable } from '$lib/stores';
+	import { cn, getTimeLabel } from '$lib/utils';
+	import { differenceInCalendarDays } from 'date-fns';
+	import { Check, CircleCheck } from 'lucide-svelte';
+	import type { Subject } from '$lib/Subject';
+	import timetabletimes from '$lib/timetabletimes';
 
-	// The `$:` is to make sure svelte loads the title correctly after when the locale changes
+	// The `$:` is to make sure svelte loads the title correctly when the locale changes
 	$: $currentTab = $t('titles.home');
 
 	$: homeworksArray = Array.from($subjects)
 		.map(([_, val]) => val.homeworks)
 		.flat();
 	$: undoneHomework = homeworksArray.filter((homework) => !homework.done);
-	$: earliestHomework = undoneHomework.sort(
-		(a, b) => (a.dueTo ?? Infinity) - (b.dueTo ?? Infinity)
-	)[0];
+	$: homeworkForTomorrow = homeworksArray.filter((homework) => {
+		if (!homework.dueTo) return false;
+		const days = differenceInCalendarDays(homework.dueTo, new Date());
+		return days <= 1;
+	});
+	$: homeworkForToday = homeworkForTomorrow.filter((homework) => {
+		const days = differenceInCalendarDays(homework.dueTo!, new Date());
+		return days == 0;
+	});
+	$: allDone =
+		homeworkForToday.length != 0
+			? homeworkForToday.every((homework) => homework.done)
+			: homeworkForTomorrow.every((homework) => homework.done);
+	$: earliestHomework =
+		homeworkForTomorrow.length == 0
+			? undoneHomework.sort((a, b) => (a.dueTo ?? Infinity) - (b.dueTo ?? Infinity))[0]
+			: null;
 	$: earliestHomeworkSubject = earliestHomework ? $subjects.get(earliestHomework.subjectId) : null;
+
+	function getNextLesson(timetable: (Subject | null)[]): Subject | null {
+		const date = new Date();
+		const day = date.getDay() - 1;
+		if (day < 0 && day > 4) return null;
+
+		const hour = date.getHours();
+		const minute = date.getMinutes();
+
+		let lh = -1;
+		for (const [index, time] of timetabletimes.entries()) {
+			if (hour <= time[0]) {
+				if (minute < time[1]) {
+					lh = index;
+				} else {
+					lh = index + 1;
+				}
+			}
+		}
+
+		if (lh >= 0 && lh < 12) {
+			return timetable[lh * 5 + day];
+		}
+
+		return null;
+	}
+
+	$: nextSubject = getNextLesson($timetable);
 </script>
 
 <div class="grid w-full gap-4 px-8 py-16">
@@ -32,38 +78,88 @@
 			{$t('home.homework-label.other', { values: { count: undoneHomework.length } })}
 		{/if}
 	</h1>
-	{#if earliestHomework}
-		<a
-			href="/homework"
-			class="grid gap-2 rounded-md border-[1px] border-accent px-4 py-6 transition active:scale-95"
-		>
-			<p class="text-xl">{$t('home.homework-next')}:</p>
+	<div>
+		{#if homeworkForTomorrow.length != 0}
+			<a
+				href="/homework"
+				class="relative grid gap-2 rounded-md border-[1px] border-accent px-4 py-6 transition active:scale-95"
+			>
+				<p class="text-xl">
+					{$t('home.homework-for-' + (homeworkForToday.length > 0 ? 'today' : 'tomorrow'))}:
+				</p>
 
-			<div class="flex items-center">
-				<p
-					style="background-color: {earliestHomeworkSubject?.color}"
-					class="rounded-md px-2 py-0.5"
-				>
-					{earliestHomeworkSubject?.name}
-				</p>
-				<p class="mx-6 text-lg">{earliestHomework.desc}</p>
-				<p class="flex-1 text-end">
-					{earliestHomework.dueTo ? getTimeLabel(earliestHomework.dueTo, $t) : ''}
-				</p>
-			</div>
+				{#each homeworkForToday.length > 0 ? homeworkForToday : homeworkForTomorrow as homework}
+					<div class="mt-2 flex items-center">
+						<p
+							style="background-color: {$subjects.get(homework.subjectId)?.color}"
+							class="rounded-md px-2 py-0.5"
+							class:opacity-50={homework.done}
+						>
+							{$subjects.get(homework.subjectId)?.name}
+						</p>
+						<p class={cn('mx-6 flex-1 text-lg', homework.done && 'line-through opacity-50')}>
+							{homework.desc}
+						</p>
+						{#if homework.done}
+							<Check size={18} class="mr-4" />
+						{/if}
+					</div>
+				{/each}
+
+				{#if allDone}
+					<CircleCheck
+						size={26}
+						color="green"
+						transform="rotate(350)"
+						class="absolute right-[-10px] top-[-10px]"
+					/>
+				{/if}
+			</a>
+		{:else if earliestHomework}
+			<a
+				href="/homework"
+				class="grid gap-2 rounded-md border-[1px] border-accent px-4 py-6 transition active:scale-95"
+			>
+				<p class="text-xl">{$t('home.homework-next')}:</p>
+
+				<div class="flex items-center">
+					<p
+						style="background-color: {earliestHomeworkSubject?.color}"
+						class="rounded-md px-2 py-0.5"
+					>
+						{earliestHomeworkSubject?.name}
+					</p>
+					<p class="mx-6 text-lg">{earliestHomework.desc}</p>
+					<p class="flex-1 text-end">
+						{earliestHomework.dueTo ? getTimeLabel(earliestHomework.dueTo, $t) : ''}
+					</p>
+				</div>
+			</a>
+		{:else}
+			<a
+				href="/homework"
+				class="grid gap-2 rounded-md border-[1px] border-accent p-6 text-center text-lg transition active:scale-95"
+			>
+				{$t('home.goto-homeworks')}
+			</a>
+		{/if}
+	</div>
+	{#if nextSubject}
+		<a
+			class="rounded-md border-[1px] border-accent p-6 text-center text-lg transition active:scale-95"
+			href="/timetable"
+		>
+			{$t('home.next-lesson')}:
+			<span style:background-color={nextSubject.color} class="ml-6 rounded-md px-2 py-1"
+				>{nextSubject.name}</span
+			>
 		</a>
 	{:else}
 		<a
-			href="'/homework'"
-			class="grid gap-2 rounded-md border-[1px] border-accent p-6 text-center text-lg transition active:scale-95"
+			class="rounded-md border-[1px] border-accent p-6 text-center text-lg transition active:scale-95"
+			href="/timetable"
 		>
-			{$t('home.goto-homeworks')}
+			{$t('home.goto-timetable')}
 		</a>
 	{/if}
-	<a
-		class="rounded-md border-[1px] border-accent p-6 text-center text-lg transition active:scale-95"
-		href="/timetable"
-	>
-		{$t('home.goto-timetable')}
-	</a>
 </div>

@@ -5,11 +5,15 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.schoolorganizer.app.database.entities.Homework
+import java.util.UUID
 
 @Dao
 interface HomeworkDao {
     @Query("SELECT * FROM homework")
     fun getAll(): List<Homework>
+
+    @Query("SELECT image FROM homework WHERE id = :id")
+    fun getImageById(id: Int): UUID?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     fun insert(homework: Homework): Long

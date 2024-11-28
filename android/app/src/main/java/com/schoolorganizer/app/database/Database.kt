@@ -1,6 +1,7 @@
 package com.schoolorganizer.app.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.schoolorganizer.app.database.dao.HomeworkDao
@@ -16,17 +17,21 @@ import com.schoolorganizer.app.database.entities.TimetableSlot
         Homework::class,
         TimetableSlot::class
     ],
-    version = 1
+    version = 3,
 )
 abstract class Database : RoomDatabase() {
     companion object {
         private var INSTANCE: Database? = null
 
         fun getDatabase(context: Context): Database {
-            if (INSTANCE == null) {
-                INSTANCE = Room.databaseBuilder(context, Database::class.java, "default").build()
+            synchronized(this) {
+                if (INSTANCE == null) {
+                    INSTANCE = Room
+                        .databaseBuilder(context, Database::class.java, "default")
+                        .build()
+                }
+                return INSTANCE as Database
             }
-            return INSTANCE as Database
         }
     }
 

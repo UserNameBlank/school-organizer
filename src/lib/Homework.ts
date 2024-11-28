@@ -4,4 +4,5 @@ export interface Homework {
 	subjectId: number;
 	dueTo: number | null;
 	done: boolean;
+	image: string | null;
 }

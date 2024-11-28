@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
+import { differenceInCalendarDays } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -55,22 +56,51 @@ export const flyAndScale = (
 	};
 };
 
+// export function getTimeLabel(
+// 	date: number,
+// 	format: (_c: string, _o?: { values: { count: number } }) => string
+// ): string {
+// 	const millis = date - new Date().getTime();
+//
+// 	if (millis > 864e5) {
+// 		const days = Math.floor(millis / 864e5);
+// 		return format('homework.card.times.days', { values: { count: days } });
+// 	} else if (millis > 36e5) {
+// 		const hours = Math.floor(millis / 36e5);
+// 		return format('homework.card.times.hours', { values: { count: hours } });
+// 	} else if (millis > 6e4) {
+// 		const minutes = Math.floor(millis / 6e4);
+// 		return format('homework.card.times.minutes', { values: { count: minutes } });
+// 	} else {
+// 		return format('homework.card.times.expired');
+// 	}
+// }
+
 export function getTimeLabel(
-	date: number,
+	d: number,
 	format: (_c: string, _o?: { values: { count: number } }) => string
 ): string {
-	const millis = date - new Date().getTime();
+	const date = new Date(d);
+	const days = differenceInCalendarDays(date, new Date());
 
-	if (millis > 864e5) {
-		const days = Math.floor(millis / 864e5);
-		return format('homework.card.times.days', { values: { count: days } });
-	} else if (millis > 36e5) {
-		const hours = Math.floor(millis / 36e5);
-		return format('homework.card.times.hours', { values: { count: hours } });
-	} else if (millis > 6e4) {
-		const minutes = Math.floor(millis / 6e4);
-		return format('homework.card.times.minutes', { values: { count: minutes } });
+	console.log(days);
+
+	if (days > 0) {
+		if (days == 1) {
+			return format('homework.card.times.tomorrow');
+		} else {
+			return format('homework.card.times.days', { values: { count: days } });
+		}
 	} else {
-		return format('homework.card.times.expired');
+		const millis = d - new Date().getTime();
+		if (millis > 36e5) {
+			const hours = Math.floor(millis / 36e5);
+			return format('homework.card.times.hours', { values: { count: hours } });
+		} else if (millis > 6e4) {
+			const minutes = Math.floor(millis / 6e4);
+			return format('homework.card.times.minutes', { values: { count: minutes } });
+		} else {
+			return format('homework.card.times.expired');
+		}
 	}
 }

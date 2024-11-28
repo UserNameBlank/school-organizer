@@ -18,6 +18,8 @@ import {
 import { dataService, loadStores } from '$lib/database';
 import { toast } from 'svelte-sonner';
 import { setMode } from 'mode-watcher';
+import { goto } from '$app/navigation';
+import { error } from './stacktrace/stores';
 
 export const prerender = true;
 export const ssr = false;
@@ -39,6 +41,24 @@ export const load: LayoutLoad = async () => {
 	dataService.addListener('contentExported', () => {
 		toast.success($format('settings.content-exported'));
 	});
+	dataService.addListener(
+		'errorReceived',
+		({ stacktrace, clazz, message }: { stacktrace: string; clazz: string; message: string }) => {
+			toast.error('Error received', {
+				action: {
+					label: 'Stacktrace',
+					onClick: () => {
+						error.set({
+							stacktrace,
+							clazz,
+							message
+						});
+						goto('/stacktrace');
+					}
+				}
+			});
+		}
+	);
 
 	locale.set((await Preferences.getString({ key: 'language' })).value ?? getLocaleFromNavigator());
 	showNotifications.set(

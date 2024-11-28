@@ -1,5 +1,6 @@
 package com.schoolorganizer.app.database.dao
 
+import android.content.Context
 import androidx.room.Dao
 import androidx.room.Embedded
 import androidx.room.Insert
@@ -12,6 +13,7 @@ import com.schoolorganizer.app.database.entities.Homework
 import com.schoolorganizer.app.database.entities.Subject
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 
 @Dao
 interface SubjectDao {

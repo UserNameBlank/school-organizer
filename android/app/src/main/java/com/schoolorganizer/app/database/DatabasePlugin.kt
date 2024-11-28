@@ -3,12 +3,15 @@ package com.schoolorganizer.app.database
 import android.Manifest
 import android.app.Activity
 import android.app.AlarmManager
+import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.core.net.toUri
 import androidx.work.WorkInfo
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
@@ -20,15 +23,18 @@ import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
+import com.schoolorganizer.app.MainActivity
 import com.schoolorganizer.app.database.helpers.ExportContentHelper
 import com.schoolorganizer.app.database.helpers.ImportContentHelper
 import com.schoolorganizer.app.database.entities.Homework
 import com.schoolorganizer.app.database.entities.Subject
 import com.schoolorganizer.app.database.entities.TimetableSlot
+import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.Calendar
 import java.util.Date
+import java.util.UUID
 
 @CapacitorPlugin(
     name = "Database",
@@ -42,11 +48,21 @@ import java.util.Date
 class DatabasePlugin : Plugin() {
 
     private lateinit var db: Database
+    private lateinit var imageDir: File
 
     override fun load() {
         db = Database.getDatabase(context)
-
-        DatabaseAlarm.startFromPreferences(context)
+        imageDir = File(context.filesDir, "images")
+        imageDir.mkdir()
+        try {
+            DatabaseAlarm.startFromPreferences(context)
+        } catch (e: Exception) {
+            val obj = JSObject()
+            obj.put("stacktrace", e.stackTraceToString())
+            obj.put("message", e.message)
+            obj.put("clazz", e.javaClass.name)
+            notifyListeners("errorReceived", obj);
+        }
     }
 
     @PluginMethod
@@ -119,6 +135,48 @@ class DatabasePlugin : Plugin() {
     }
 
     @PluginMethod
+    fun pickImage(call: PluginCall) {
+        val intent = Intent().apply {
+            type = "image/*"
+            action = Intent.ACTION_GET_CONTENT
+        }
+        startActivityForResult(call, intent, "imagePickResult")
+    }
+
+    @ActivityCallback
+    fun imagePickResult(call: PluginCall, result: ActivityResult) {
+        when (result.resultCode) {
+            Activity.RESULT_OK -> {
+                result.data?.data?.let { uri ->
+                    val data = loadImageFrom(uri)
+
+                    val ret = JSObject()
+                    ret.put("data", data)
+                    ret.put("uri", uri)
+                    call.resolve(ret)
+
+                    return
+                }
+                call.reject("Failed to pick image")
+            }
+            Activity.RESULT_CANCELED -> call.reject("pick image cancelled")
+            else -> call.reject("Failed to pick image")
+        }
+    }
+
+    private fun loadImageFrom(uri: Uri): String? {
+        val type = context.contentResolver.getType(uri)
+        context.contentResolver.openInputStream(uri)?.let { inputStream ->
+            val bytes = inputStream.readBytes()
+            inputStream.close()
+
+            val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+            return "data:$type;base64,$base64"
+        }
+        return null
+    }
+
+    @PluginMethod
     fun getHomeworks(call: PluginCall) {
         val homeworkDao = db.homeworkDao()
 
@@ -136,13 +194,45 @@ class DatabasePlugin : Plugin() {
         val desc = call.getString("desc")!!
         val subjectId = call.getInt("subjectId")!!
         val dueTo = call.getLong("dueTo")
+        val image = call.getString("image")?.let { writeImage(it.toUri()) }
 
-        val id = homeworkDao.insert(Homework(0, desc, subjectId, dueTo, false))
+        val id = homeworkDao.insert(Homework(
+            0,
+            desc,
+            subjectId,
+            dueTo,
+            false,
+            image
+        ))
 
         val ret = JSObject()
         ret.put("id", id)
+        ret.put("image", image?.let { "${MainActivity.IMAGE_RESOURCE_URL}/$image" })
         call.resolve(ret)
     }
+
+    private fun writeImage(uri: Uri): UUID {
+        val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
+
+        val id = UUID.randomUUID()
+        val file = File(imageDir, id.toString())
+        file.createNewFile()
+        file.writeBytes(bytes)
+
+        return id
+    }
+
+//    private fun writeImage(uri: Uri): UUID {
+//        val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
+//        val type = context.contentResolver.getType(uri)
+//        val content = "data:$type;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+//
+//        val id = UUID.randomUUID()
+//        context.openFileOutput("image_$id", Context.MODE_PRIVATE).use {
+//            it.write(content.toByteArray())
+//        }
+//        return id
+//    }
 
     @PluginMethod
     fun removeHomework(call: PluginCall) {
@@ -150,7 +240,13 @@ class DatabasePlugin : Plugin() {
 
         val id = call.getInt("id")!!
 
+        val image = homeworkDao.getImageById(id)
         homeworkDao.deleteById(id)
+
+        if (image != null) {
+            context.deleteFile("image_$image")
+            Log.i("DATABASE", "deleted image: $image")
+        }
 
         call.resolve()
     }

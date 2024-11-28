@@ -13,7 +13,15 @@ class PreferencesPlugin : Plugin() {
     private lateinit var sharedPreferences: SharedPreferences
 
     override fun load() {
-        sharedPreferences = Preferences.getInstance(context)
+        try {
+            sharedPreferences = Preferences.getInstance(context)
+        } catch (e: Exception) {
+            val obj = JSObject()
+            obj.put("stacktrace", e.stackTraceToString())
+            obj.put("message", e.message)
+            obj.put("clazz", e.javaClass.name)
+            notifyListeners("errorReceived", obj)
+        }
     }
 
     @PluginMethod

@@ -8,10 +8,14 @@ export interface DatabasePlugin {
 	removeSubject(options: { id: number }): Promise<void>;
 	editSubject(subject: Subject): Promise<void>;
 
+	pickImage(): Promise<{ data: string; uri: string }>;
+	// loadImage(options: { id: string }): Promise<{ data: string }>;
+
 	getHomeworks(): Promise<{ homeworks: Homework[] }>;
-	addHomework(homework: Homework): Promise<{ id: number }>;
+	addHomework(homework: Homework): Promise<{ id: number; image: string }>;
 	removeHomework(options: { id: number }): Promise<void>;
 	removeOldHomework(): Promise<void>;
+	// editHomework(homework: Homework): Promise<void>;
 	setHomeworkDone(options: { id: number; done: boolean }): Promise<void>;
 
 	setTimetableSlot(options: { id: number; subjectId: number }): Promise<void>;

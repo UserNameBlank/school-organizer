@@ -23,6 +23,9 @@
 			"other": "{count} Hausaufgaben... 💀"
 		},
 		"homework-next": "nächste Hausaufgabe",
+		"homework-for-tomorrow": "Hausaufgaben für Morgen",
+		"homework-for-today": "Hausaufgaben für Heute",
+		"next-lesson": "nächste Stunde",
 		"goto-homeworks": "Hausaufgaben aufrufen",
 		"goto-timetable": "Stundenplan aufrufen"
 	},
@@ -59,12 +62,14 @@
 					"manual": "Datum"
 				},
 				"lessons-label": "Bis zur {count, plural, one {nächsten} other {#}} Schulstunde",
-				"pick-date": "Datum auswählen"
+				"pick-date": "Datum auswählen",
+				"pick-image": "Bild hinzufügen"
 			}
 		},
 		"card": {
 			"no-homework": "keine Hausaufgaben",
 			"times": {
+				"tomorrow": "Morgen",
 				"days": "noch {count, plural, one {# Tag} other {# Tage}}",
 				"hours": "noch {count, plural, one {# Stunde} other {# Stunden}}",
 				"minutes": "noch {count, plural, one {# Minute} other {# Minuten}}",
