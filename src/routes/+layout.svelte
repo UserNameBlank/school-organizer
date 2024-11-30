@@ -1,18 +1,19 @@
 <script lang="ts">
 	import '../app.css';
 	import '$lib/ripple/ripple.css';
-
 	import * as Sheet from '$lib/components/ui/sheet';
-
 	import { ModeWatcher } from 'mode-watcher';
 	import { t } from 'svelte-i18n';
-
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
-
 	import { loadStores } from '$lib/database';
-
 	import { currentTab } from '$lib/stores';
 	import { Toaster } from '$lib/components/ui/sonner';
+
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	async function initData() {
 		console.log('Data is being initialized...');
@@ -22,7 +23,7 @@
 
 	initData();
 
-	let open = false;
+	let open = $state(false);
 
 	let close = () => (open = false);
 
@@ -31,13 +32,13 @@
 			close();
 		}
 
-		node.addEventListener('click', onClick);
+		$effect(() => {
+			node.addEventListener('click', onClick);
 
-		return {
-			destroy: () => {
+			return () => {
 				node.removeEventListener('click', onClick);
-			}
-		};
+			};
+		});
 	}
 </script>
 
@@ -59,7 +60,7 @@
 			</h4>
 		</div>
 		<div class="flex-1 overflow-y-auto">
-			<slot />
+			{@render children?.()}
 		</div>
 	</div>
 	<Sheet.Content side="left" class="w-[250px]">

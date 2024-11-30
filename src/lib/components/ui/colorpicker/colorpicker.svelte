@@ -1,20 +1,19 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	let x: number = $state(0);
+	let y: number = $state(0);
+	let hue: number = $state(0);
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		color?: string;
+		onValueChange?: (color: string) => void;
+	}
 
-	let x: number = 0;
-	let y: number = 0;
-	let hue: number = 0;
-
-	export let color: string = '#ffffff';
+	let { color = $bindable('#ffffff'), onValueChange }: Props = $props();
 
 	function updateColor(rgb: { r: number; g: number; b: number }) {
 		color = rgbToHex(rgb);
-		dispatch('change', { color });
+		onValueChange?.(color);
 	}
-
-	$: updateColor(hsvToRgb({ h: hue, s: x, v: 100 - y }));
 
 	function clamp(value: number, min: number, max: number) {
 		return Math.max(Math.min(value, max), min);
@@ -90,6 +89,10 @@
 			}
 		};
 	}
+
+	$effect(() => {
+		updateColor(hsvToRgb({ h: hue, s: x, v: 100 - y }));
+	});
 </script>
 
 <div style="--current-hue: {hue}; --current-color: {color};" class="grid gap-4 rounded-md p-4">

@@ -1,11 +1,17 @@
 <script lang="ts">
+	import { preventDefault } from 'svelte/legacy';
+
 	import type { FormEventHandler } from 'svelte/elements';
 
-	export let time = '17:00';
-	export let onSubmit: (time: string) => any;
+	interface Props {
+		time?: string;
+		onSubmit: (time: string) => any;
+	}
+
+	let { time = $bindable('17:00'), onSubmit }: Props = $props();
 
 	let cursorPos = 0;
-	let overlay = '';
+	let overlay = $state('');
 
 	const regex = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
 
@@ -49,7 +55,7 @@
 		overlay = '';
 	}
 
-	let inputElement: HTMLInputElement;
+	let inputElement: HTMLInputElement = $state();
 </script>
 
 <div class="relative">
@@ -58,9 +64,9 @@
 		bind:this={inputElement}
 		class="w-20 rounded-md bg-background py-0.5 pl-5 outline-none outline-1 outline-accent focus:font-bold"
 		type="text"
-		on:keydown|preventDefault={onInput}
-		on:focusin={onFocusIn}
-		on:focusout={onFocusOut}
+		onkeydown={preventDefault(onInput)}
+		onfocusin={onFocusIn}
+		onfocusout={onFocusOut}
 		value={time}
 	/>
 </div>

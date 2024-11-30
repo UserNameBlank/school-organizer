@@ -1,27 +1,29 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
-	import { createEventDispatcher } from 'svelte';
-	import { ripple } from '$lib/ripple';
+	import { ripple } from '$lib/ripple/index.svelte';
 	import { slide } from 'svelte/transition';
 
-	const dispatch = createEventDispatcher();
-
-	export let id: number;
-	export let name: string;
-	export let color: string;
-
-	function onEdit() {
-		dispatch('edit', { id });
+	interface Props {
+		id: number;
+		name: string;
+		color: string;
+		onedit: (event: { detail: { id: number } }) => void;
 	}
+
+	let { id, name, color, onedit }: Props = $props();
 </script>
 
 <button
 	transition:slide
-	on:contextmenu|preventDefault={onEdit}
+	oncontextmenu={(e) => {
+		e.preventDefault();
+		onedit({ detail: { id } });
+		console.log('right click');
+	}}
 	class="rounded-md text-start transition delay-200 active:scale-95"
 	use:ripple={{ inEvents: ['contextmenu'] }}
 >
-	<Card.Root>
+	<Card.Root class="pb-6">
 		<Card.Header class="flex flex-row items-center">
 			<Card.Title class="flex-1">{name}</Card.Title>
 			<div

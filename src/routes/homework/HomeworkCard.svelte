@@ -2,30 +2,42 @@
 	import type { Homework } from '$lib/Homework';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { dataService } from '$lib/database';
-	import { createEventDispatcher } from 'svelte';
 
 	import { t } from 'svelte-i18n';
 
 	import { send, receive } from '$lib/transition';
 	import { subjects } from '$lib/stores';
 	import { cn, getTimeLabel } from '$lib/utils';
-	import { ripple } from '$lib/ripple';
+	import { ripple } from '$lib/ripple/index.svelte';
 
-	const dispatch = createEventDispatcher();
-
-	export let id: number;
-	export let name: string;
-	export let color: string;
-
-	export let homeworks: Homework[];
-
-	function onClick() {
-		dispatch('addHomework', { id });
+	interface Props {
+		id: number;
+		name: string;
+		color: string;
+		homeworks: Homework[];
+		addHomework?: (event: { detail: { id: number } }) => void;
+		editHomework?: (event: { detail: { id: number; homeworks: Homework[] } }) => void;
+		showImage?: (event: { detail: { image: string } }) => void;
 	}
 
-	function onContextMenu() {
+	let {
+		id,
+		name,
+		color,
+		homeworks = $bindable(),
+		addHomework,
+		editHomework,
+		showImage
+	}: Props = $props();
+
+	function onClick() {
+		addHomework?.({ detail: { id } });
+	}
+
+	function onContextMenu(e: Event) {
+		e.preventDefault();
 		if (homeworks.length > 0) {
-			dispatch('editHomework', { id, homeworks });
+			editHomework?.({ detail: { id, homeworks } });
 		}
 	}
 
@@ -41,18 +53,14 @@
 		});
 	}
 
-	function showImage(image: string | null) {
-		dispatch('showImage', { image });
-	}
-
-	$: allSame = homeworks.every((it) => it.dueTo == homeworks[0].dueTo);
+	let allSame = $derived(homeworks.every((it) => it.dueTo == homeworks[0].dueTo));
 </script>
 
 <button
 	class="relative rounded-md border-b-2 p-8 text-start outline-none outline-1 outline-accent-foreground dark:outline-accent"
 	style="border-bottom-color: {color};"
-	on:click={onClick}
-	on:contextmenu|preventDefault={onContextMenu}
+	onclick={onClick}
+	oncontextmenu={onContextMenu}
 	in:receive={{ key: id }}
 	out:send={{ key: id }}
 	use:ripple={{ inEvents: ['click', 'contextmenu'] }}
@@ -84,9 +92,9 @@
 							{/if}
 						</div>
 
-						<div class="translate-y-0.5" role="none" on:click={(e) => e.stopImmediatePropagation()}>
+						<div class="translate-y-0.5" role="none" onclick={(e) => e.stopImmediatePropagation()}>
 							<Checkbox
-								onCheckedChange={(checked) => onCheckedChange(checked, homework.id)}
+								onCheckedChange={(checked: boolean) => onCheckedChange(checked, homework.id)}
 								checked={homework.done}
 							></Checkbox>
 						</div>
@@ -94,7 +102,10 @@
 					{#if !homework.done && homework.image}
 						<button
 							class="m-2 w-36 transition active:scale-95"
-							on:click|stopPropagation={() => showImage(homework.image)}
+							onclick={(e) => {
+								e.stopPropagation();
+								showImage?.({ detail: { image: homework.image!! } });
+							}}
 						>
 							<img class="rounded-md" src={homework.image} alt="homework" />
 						</button>

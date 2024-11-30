@@ -27,8 +27,6 @@
  *  SOFTWARE.
  */
 
-import { onMount } from 'svelte';
-
 const DEFAULT_INEVENTS = ['pointerdown', 'touchstart'];
 const OUTEVENTS = [
 	'focusout',
@@ -63,13 +61,13 @@ export interface RippleOptions {
 	inEvents?: string[];
 }
 
-const addEvent = (el: HTMLElement, event: string, callback: (...args: any[]) => void) => {
-	el.addEventListener(event, callback);
-};
-
-const removeEvent = (el: HTMLElement, event: string, callback: (...args: any[]) => void) => {
-	el.removeEventListener(event, callback);
-};
+// const addEvent = (el: HTMLElement, event: string, callback: (...args: any[]) => void) => {
+// 	el.addEventListener(event, callback);
+// };
+//
+// const removeEvent = (el: HTMLElement, event: string, callback: (...args: any[]) => void) => {
+// 	el.removeEventListener(event, callback);
+// };
 
 const findFurthestPoint = (
 	clickPointX: number,
@@ -99,9 +97,9 @@ export function ripple(el: HTMLElement, options?: RippleOptions) {
 		}
 	};
 
-	onMount(() => {
-		addClassIfMissing();
-	});
+	// onMount(() => {
+	// 	addClassIfMissing();
+	// });
 
 	let maximumRadius = 0;
 
@@ -128,12 +126,10 @@ export function ripple(el: HTMLElement, options?: RippleOptions) {
 		}
 	};
 
-	setOptions(options);
-
 	const createRipple = (e: PointerEvent) => {
 		if (options?.disabled) return;
 
-		e.stopPropagation();
+		// e.stopPropagation();
 
 		addClassIfMissing();
 
@@ -182,26 +178,24 @@ export function ripple(el: HTMLElement, options?: RippleOptions) {
 		};
 
 		OUTEVENTS.forEach((event) => {
-			addEvent(el, event, removeRipple);
+			el.addEventListener(event, removeRipple);
 		});
 	};
 
 	const inEvents = options?.inEvents || DEFAULT_INEVENTS;
 
-	inEvents.forEach((event) => {
-		addEvent(el, event, createRipple);
-	});
+	$effect(() => {
+		addClassIfMissing();
+		setOptions(options);
 
-	return {
-		destroy: () => {
+		inEvents.forEach((event) => {
+			el.addEventListener(event as any, createRipple);
+		});
+
+		return () => {
 			inEvents.forEach((event) => {
-				removeEvent(el, event, createRipple);
+				el.removeEventListener(event as any, createRipple);
 			});
-		},
-		update: (newOptions: RippleOptions) => {
-			options = newOptions;
-
-			setOptions(newOptions);
-		}
-	};
+		};
+	});
 }

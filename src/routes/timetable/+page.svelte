@@ -9,15 +9,16 @@
 	import type { Subject } from '$lib/Subject';
 	import { dataService } from '$lib/database';
 	import { t, json } from 'svelte-i18n';
-	import { page } from '$app/stores';
 
-	$: $currentTab = $t('titles.timetable');
+	$effect(() => {
+		$currentTab = $t('titles.timetable');
+	});
 
-	let editMode = false;
-	let drawerOpen = false;
+	let editMode = $state(false);
+	let drawerOpen = $state(false);
 	let currentSlot: number | null = null;
 	let selectedSubject: Subject;
-	let editSubject = false;
+	let editSubject = $state(false);
 
 	function setSlot(slot: number) {
 		currentSlot = slot;
@@ -47,11 +48,12 @@
 		dataService.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
 	}
 
-	function onSelectSubject(v: unknown) {
-		selectedSubject = (v as { value: Subject }).value;
+	function onSelectSubject(v: string) {
+		const subject = $subjects.get(parseInt(v))!;
+		selectedSubject = subject;
 	}
 
-	$: days = $json('timetable.days') as string[];
+	let days = $derived($json('timetable.days') as string[]);
 </script>
 
 <Drawer.Root bind:open={drawerOpen}>
@@ -133,14 +135,14 @@
 					{#each $timetable as subject, i}
 						{#if subject}
 							<button
-								on:click={() => onEditSlot(i)}
+								onclick={() => onEditSlot(i)}
 								class="flex items-center justify-center rounded-md bg-gray-500 text-xl font-semibold active:bg-accent"
 							>
 								{subject.name}
 							</button>
 						{:else}
 							<button
-								on:click={() => setSlot(i)}
+								onclick={() => setSlot(i)}
 								class="dotted-outline flex items-center justify-center rounded-md active:bg-accent"
 							>
 								<Plus />
@@ -172,27 +174,29 @@
 				<Drawer.Description>{$t('timetable.drawer.reset-slot.subtitle')}</Drawer.Description>
 			</Drawer.Header>
 			<Drawer.Footer>
-				<Button variant="destructive" on:click={clearSlot}
+				<Button variant="destructive" onclick={clearSlot}
 					>{$t('timetable.drawer.reset-slot.button')}</Button
 				>
 				<Drawer.Close>{$t('ui.cancel')}</Drawer.Close>
 			</Drawer.Footer>
 		{:else}
-			<Select.Root onSelectedChange={(it) => it && onSelectSubject(it)}>
+			<Select.Root type="single" onValueChange={(it) => it && onSelectSubject(it)}>
 				<Drawer.Header>
 					<Drawer.Title>{$t('timetable.drawer.set-slot.title')}</Drawer.Title>
 					<Drawer.Description>{$t('timetable.drawer.set-slot.subtitle')}</Drawer.Description>
 				</Drawer.Header>
-				<div class="p-4"><Select.Trigger><Select.Value /></Select.Trigger></div>
+				<div class="p-4"><Select.Trigger>Slot</Select.Trigger></div>
 				<Drawer.Footer>
-					<Button on:click={submitSlot}>{$t('timetable.drawer.set-slot.button')}</Button>
+					<Button onclick={submitSlot}>{$t('timetable.drawer.set-slot.button')}</Button>
 					<Drawer.Close>{$t('ui.cancel')}</Drawer.Close>
 				</Drawer.Footer>
 
 				<Select.Content>
 					{#each $subjects.values() as subject}
-						<Select.Item value={subject} class="flex flex-row" style="color: {subject.color}"
-							>{subject.name}</Select.Item
+						<Select.Item
+							value={subject.id.toString()}
+							class="flex flex-row"
+							style="color: {subject.color}">{subject.name}</Select.Item
 						>
 					{/each}
 				</Select.Content>

@@ -15,7 +15,7 @@
 	import { subjects, timetable, currentTab as globalCurrentTab } from '$lib/stores';
 	import timetabletimes from '$lib/timetabletimes';
 	import HomeworkCard from './HomeworkCard.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { Calendar } from '$lib/components/ui/calendar';
@@ -26,21 +26,24 @@
 	import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import HomeworkListItem from './HomeworkListItem.svelte';
 	import { ImageViewer } from 'svelte-image-viewer';
+	import clsx from 'clsx';
 
-	$: $globalCurrentTab = $t('titles.homework');
+	$effect(() => {
+		$globalCurrentTab = $t('titles.homework');
+	});
 
-	let drawerOpen = false;
+	let drawerOpen = $state(false);
 	let currentId: number | null = null;
-	let currentDesc = '';
+	let currentDesc = $state('');
 	let currentImage: {
 		data: string;
 		uri: string;
-	} | null = null;
-	let editHomework = false;
-	let currentHomeworks: Homework[] = [];
-	let untilCounter = 1;
-	let currentDate: DateValue | undefined = undefined;
-	let currentTab = 'automatic';
+	} | null = $state(null);
+	let editHomework = $state(false);
+	let currentHomeworks: Homework[] = $state([]);
+	let untilCounter = $state(1);
+	let currentDate: DateValue | undefined = $state(undefined);
+	let currentTab = $state('automatic');
 
 	const dateFormatter = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -49,13 +52,17 @@
 	};
 	const addCounter = () => untilCounter++;
 
-	$: firstHalf = Array.from($subjects)
-		.map(([_key, val]) => val)
-		.filter((it) => it.homeworks.length != 0)
-		.sort((a, b) => (a.homeworks[0].dueTo ?? Infinity) - (b.homeworks[0].dueTo ?? Infinity));
-	$: secondHalf = Array.from($subjects)
-		.map(([_key, val]) => val)
-		.filter((it) => it.homeworks.length == 0);
+	let firstHalf = $derived(
+		Array.from($subjects)
+			.map(([_key, val]) => val)
+			.filter((it) => it.homeworks.length != 0)
+			.sort((a, b) => (a.homeworks[0].dueTo ?? Infinity) - (b.homeworks[0].dueTo ?? Infinity))
+	);
+	let secondHalf = $derived(
+		Array.from($subjects)
+			.map(([_key, val]) => val)
+			.filter((it) => it.homeworks.length == 0)
+	);
 
 	function onAddHomework(event: { detail: { id: number } }) {
 		editHomework = false;
@@ -121,7 +128,9 @@
 		return null;
 	}
 
-	async function onSubmitHomework() {
+	async function onSubmitHomework(e: Event) {
+		e.preventDefault();
+
 		if (currentId === null) return;
 		drawerOpen = false;
 
@@ -160,10 +169,10 @@
 		currentImage = await dataService.pickImage();
 	}
 
-	let showingImage = false;
-	let imageToShow: string | null = null;
+	let showingImage = $state(false);
+	let imageToShow: string | null = $state(null);
 
-	function showImage(e: CustomEvent<{ image: string }>) {
+	function showImage(e: { detail: { image: string } }) {
 		imageToShow = e.detail.image;
 		showingImage = true;
 	}
@@ -179,7 +188,7 @@
 		<ImageViewer src={imageToShow} />
 	</div>
 	<Button
-		on:click={closeImage}
+		onclick={closeImage}
 		variant="ghost"
 		size="icon"
 		class="absolute right-4 top-4 z-[56] h-20 w-20 rounded-full"
@@ -213,9 +222,9 @@
 					name={subject.name}
 					color={subject.color}
 					homeworks={subject.homeworks}
-					on:addHomework={onAddHomework}
-					on:editHomework={onEditHomework}
-					on:showImage={showImage}
+					addHomework={onAddHomework}
+					editHomework={onEditHomework}
+					{showImage}
 				/>
 			{/each}
 			{#each secondHalf as subject (subject.id)}
@@ -224,7 +233,7 @@
 					name={subject.name}
 					color={subject.color}
 					homeworks={subject.homeworks}
-					on:addHomework={onAddHomework}
+					addHomework={onAddHomework}
 				/>
 			{/each}
 		</div>
@@ -236,25 +245,25 @@
 			</Drawer.Header>
 			<div class="mt-10 grid w-full gap-4 px-4">
 				{#each currentHomeworks as homework (homework.id)}
-					<HomeworkListItem {homework} on:remove={(e) => removeHomework(e.detail.homework)} />
+					<HomeworkListItem {homework} onremove={(hw) => removeHomework(hw)} />
 				{/each}
 			</div>
 			<Drawer.Footer class="mt-10 pt-2">
-				<Drawer.Close asChild let:builder>
-					<Button variant="outline" builders={[builder]}>{$t('ui.cancel')}</Button>
+				<Drawer.Close class={buttonVariants({ variant: 'outline' })}
+					>{$t('ui.cancel')}
 				</Drawer.Close>
 			</Drawer.Footer>
 		{:else}
 			<Drawer.Header>
 				<Drawer.Title>{$t('homework.drawer.add-homework.title')}</Drawer.Title>
 			</Drawer.Header>
-			<form class="grid items-start gap-6 px-4" on:submit|preventDefault={onSubmitHomework}>
+			<form class="grid items-start gap-6 px-4" onsubmit={onSubmitHomework}>
 				<div class="grid gap-2">
 					<Label for="name">{$t('homework.drawer.add-homework.desc-label')}</Label>
 					<Input autocomplete="off" type="text" id="name" bind:value={currentDesc} />
 
 					{#if currentImage == null}
-						<Button variant="secondary" class="mt-2" on:click={pickImage}>
+						<Button variant="secondary" class="mt-2" onclick={pickImage}>
 							<PlusCircle class="mr-2" />
 							{$t('homework.drawer.add-homework.pick-image')}
 						</Button>
@@ -281,7 +290,7 @@
 					</Tabs.List>
 					<Tabs.Content value="automatic">
 						<div class="flex items-center">
-							<Button on:click={subCounter} variant="outline" class="aspect-square rounded-full p-0"
+							<Button onclick={subCounter} variant="outline" class="aspect-square rounded-full p-0"
 								><ChevronLeft /></Button
 							>
 							<p class="flex-1 text-center">
@@ -289,31 +298,30 @@
 									values: { count: untilCounter }
 								})}
 							</p>
-							<Button on:click={addCounter} variant="outline" class="aspect-square rounded-full p-0"
+							<Button onclick={addCounter} variant="outline" class="aspect-square rounded-full p-0"
 								><ChevronRight /></Button
 							>
 						</div>
 					</Tabs.Content>
 					<Tabs.Content value="manual">
-						<Popover.Root openFocus>
-							<Popover.Trigger asChild let:builder>
-								<Button
-									variant="outline"
-									builders={[builder]}
-									class="flex w-full text-center font-normal {currentDate === undefined
-										? 'text-muted-foreground'
-										: ''}"
+						<Popover.Root>
+							<Popover.Trigger
+								class={clsx(
+									buttonVariants({ variant: 'outline' }),
+									'flex w-full text-center font-normal',
+									currentDate == undefined ? 'text-muted-foreground' : null
+								)}
+							>
+								<CalendarIcon class="mr-2 h-4 w-4" />
+								<span class="flex-1"
+									>{currentDate
+										? dateFormatter.format(currentDate.toDate(getLocalTimeZone()))
+										: $t('homework.drawer.add-homework.pick-date')}</span
 								>
-									<CalendarIcon class="mr-2 h-4 w-4" />
-									<span class="flex-1"
-										>{currentDate
-											? dateFormatter.format(currentDate.toDate(getLocalTimeZone()))
-											: $t('homework.drawer.add-homework.pick-date')}</span
-									>
-								</Button>
 							</Popover.Trigger>
 							<Popover.Content>
 								<Calendar
+									type="single"
 									bind:value={currentDate}
 									initialFocus
 									minValue={today(getLocalTimeZone())}
@@ -326,8 +334,8 @@
 				<Button type="submit" class="mt-8">{$t('ui.add')}</Button>
 			</form>
 			<Drawer.Footer class="pt-2">
-				<Drawer.Close asChild let:builder>
-					<Button variant="outline" builders={[builder]}>{$t('ui.cancel')}</Button>
+				<Drawer.Close class={buttonVariants({ variant: 'outline' })}>
+					{$t('ui.cancel')}
 				</Drawer.Close>
 			</Drawer.Footer>
 		{/if}

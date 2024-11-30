@@ -9,20 +9,21 @@ import '$lib/i18n';
 import type { LayoutLoad } from './$types';
 import { Preferences } from '$lib/preferences';
 import { App } from '@capacitor/app';
+import { dataService, loadStores } from '$lib/database';
+import { toast } from 'svelte-sonner';
+import { setMode } from 'mode-watcher';
+import { goto } from '$app/navigation';
+import { error } from './stacktrace/stores';
 import {
 	globalTheme,
 	notificationInterval,
 	notificationTime,
 	showNotifications
 } from '$lib/stores';
-import { dataService, loadStores } from '$lib/database';
-import { toast } from 'svelte-sonner';
-import { setMode } from 'mode-watcher';
-import { goto } from '$app/navigation';
-import { error } from './stacktrace/stores';
 
 export const prerender = true;
 export const ssr = false;
+
 export const load: LayoutLoad = async () => {
 	App.addListener('backButton', ({ canGoBack }) => {
 		if (!canGoBack) {
@@ -38,9 +39,11 @@ export const load: LayoutLoad = async () => {
 		loadStores();
 		toast.success($format('settings.content-imported'));
 	});
+
 	dataService.addListener('contentExported', () => {
 		toast.success($format('settings.content-exported'));
 	});
+
 	dataService.addListener(
 		'errorReceived',
 		({ stacktrace, clazz, message }: { stacktrace: string; clazz: string; message: string }) => {

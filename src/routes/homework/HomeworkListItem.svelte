@@ -2,16 +2,14 @@
 	import { Button } from '$lib/components/ui/button';
 	import type { Homework } from '$lib/Homework';
 	import { Trash } from 'lucide-svelte';
-	import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
 
-	const dispatch = createEventDispatcher();
-
-	export let homework: Homework;
-
-	function onRemove(homework: Homework) {
-		dispatch('remove', { homework });
+	interface Props {
+		homework: Homework;
+		onremove: (homework: Homework) => void;
 	}
+
+	let { homework, onremove }: Props = $props();
 </script>
 
 <div
@@ -31,7 +29,7 @@
 	<!-- 	transition:fly={{ duration: 300, x: 300 }} -->
 	<!-- > -->
 	<!-- <Button variant="outline" size="icon" on:click={onEdit}><Pencil size={20} /></Button> -->
-	<Button variant="outline" size="icon" on:click={() => onRemove(homework)}
+	<Button variant="outline" size="icon" onclick={() => onremove(homework)}
 		><Trash size={20} /></Button
 	>
 	<!-- </div> -->

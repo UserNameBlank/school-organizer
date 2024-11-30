@@ -8,30 +8,42 @@
 	import timetabletimes from '$lib/timetabletimes';
 
 	// The `$:` is to make sure svelte loads the title correctly when the locale changes
-	$: $currentTab = $t('titles.home');
+	$effect(() => {
+		$currentTab = $t('titles.home');
+	});
 
-	$: homeworksArray = Array.from($subjects)
-		.map(([_, val]) => val.homeworks)
-		.flat();
-	$: undoneHomework = homeworksArray.filter((homework) => !homework.done);
-	$: homeworkForTomorrow = homeworksArray.filter((homework) => {
-		if (!homework.dueTo) return false;
-		const days = differenceInCalendarDays(homework.dueTo, new Date());
-		return days <= 1;
-	});
-	$: homeworkForToday = homeworkForTomorrow.filter((homework) => {
-		const days = differenceInCalendarDays(homework.dueTo!, new Date());
-		return days == 0;
-	});
-	$: allDone =
+	let homeworksArray = $derived(
+		Array.from($subjects)
+			.map(([_, val]) => val.homeworks)
+			.flat()
+	);
+	let undoneHomework = $derived(homeworksArray.filter((homework) => !homework.done));
+	let homeworkForTomorrow = $derived(
+		homeworksArray.filter((homework) => {
+			if (!homework.dueTo) return false;
+			const days = differenceInCalendarDays(homework.dueTo, new Date());
+			return days <= 1;
+		})
+	);
+	let homeworkForToday = $derived(
+		homeworkForTomorrow.filter((homework) => {
+			const days = differenceInCalendarDays(homework.dueTo!, new Date());
+			return days == 0;
+		})
+	);
+	let allDone = $derived(
 		homeworkForToday.length != 0
 			? homeworkForToday.every((homework) => homework.done)
-			: homeworkForTomorrow.every((homework) => homework.done);
-	$: earliestHomework =
+			: homeworkForTomorrow.every((homework) => homework.done)
+	);
+	let earliestHomework = $derived(
 		homeworkForTomorrow.length == 0
 			? undoneHomework.sort((a, b) => (a.dueTo ?? Infinity) - (b.dueTo ?? Infinity))[0]
-			: null;
-	$: earliestHomeworkSubject = earliestHomework ? $subjects.get(earliestHomework.subjectId) : null;
+			: null
+	);
+	let earliestHomeworkSubject = $derived(
+		earliestHomework ? $subjects.get(earliestHomework.subjectId) : null
+	);
 
 	function getNextLesson(timetable: (Subject | null)[]): Subject | null {
 		const date = new Date();
@@ -59,7 +71,7 @@
 		return null;
 	}
 
-	$: nextSubject = getNextLesson($timetable);
+	let nextSubject = $derived(getNextLesson($timetable));
 </script>
 
 <div class="grid w-full gap-4 px-8 py-16">
