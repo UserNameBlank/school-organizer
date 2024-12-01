@@ -244,8 +244,12 @@ class DatabasePlugin : Plugin() {
         homeworkDao.deleteById(id)
 
         if (image != null) {
-            context.deleteFile("image_$image")
-            Log.i("DATABASE", "deleted image: $image")
+            val file = File(imageDir, image.toString())
+            if (file.delete()) {
+                Log.i("DATABASE", "successfully deleted image `$image`")
+            } else {
+                Log.i("DATABASE", "couldn't delete image: `$image`")
+            }
         }
 
         call.resolve()
