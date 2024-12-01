@@ -1,0 +1,1 @@
+import{e as c,u as o,a as d,d as i,b as u}from"./utils.DRp8il40.js";function b(e,n,f){c(()=>{var r=o(()=>n(e,f==null?void 0:f())||{});if(f&&(r!=null&&r.update)){var a=!1,t={};d(()=>{var s=f();i(s),a&&u(t,s)&&(t=s,r.update(s))}),a=!0}if(r!=null&&r.destroy)return()=>r.destroy()})}export{b as a};
