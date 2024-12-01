@@ -6,7 +6,7 @@
 	import { slide } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import type { Subject } from '$lib/Subject';
-	import { dataService } from '$lib/database';
+	import { Database } from '$lib/database';
 	import { t, json } from 'svelte-i18n';
 	import { globalState, subjectState, timetable } from '$lib/state.svelte';
 
@@ -36,7 +36,7 @@
 		drawerOpen = false;
 
 		timetable[currentSlot!] = null;
-		dataService.clearTimetableSlot({ id: currentSlot! });
+		Database.clearTimetableSlot({ id: currentSlot! });
 	}
 
 	async function submitSlot() {
@@ -45,7 +45,7 @@
 		drawerOpen = false;
 
 		timetable[currentSlot!] = selectedSubject;
-		dataService.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
+		Database.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
 	}
 
 	function onSelectSubject(v: string) {
@@ -215,7 +215,7 @@
 
 <Toggle
 	bind:pressed={editMode}
-	class="fixed bottom-8 right-8 z-30 rounded-full aspect-square bg-background p-6 shadow-md"
+	class="fixed bottom-8 right-8 z-30 aspect-square rounded-full bg-background p-6 shadow-md"
 	variant="outline"
 >
 	{#if editMode}

@@ -1,5 +1,5 @@
 import { SvelteMap } from 'svelte/reactivity';
-import { dataService } from './database';
+import { Database } from './database';
 import type { Homework } from './Homework';
 import type { Subject } from './Subject';
 
@@ -7,9 +7,9 @@ class SubjectState {
 	#subjects = $state<Map<number, Subject>>(new SvelteMap());
 
 	async load() {
-		await dataService.removeOldHomework();
+		await Database.removeOldHomework();
 
-		const subs = (await dataService.getSubjectsWithHomework()).subjects;
+		const subs = (await Database.getSubjectsWithHomework()).subjects;
 
 		this.#subjects = subs.reduce((map, sub) => {
 			const reactiveSubject = $state(sub);
@@ -18,11 +18,11 @@ class SubjectState {
 	}
 
 	get subjects(): Iterable<Subject> {
-		return this.#subjects.values()
+		return this.#subjects.values();
 	}
 
 	get(id: number): Subject | undefined {
-		return this.#subjects.get(id)
+		return this.#subjects.get(id);
 	}
 
 	get size(): number {
@@ -30,9 +30,9 @@ class SubjectState {
 	}
 
 	async addSubject(subject: Subject) {
-		let { id } = await dataService.addSubject(subject);
+		let { id } = await Database.addSubject(subject);
 		subject.id = id;
-		const reactiveSubject = $state(subject)
+		const reactiveSubject = $state(subject);
 		this.#subjects.set(subject.id, reactiveSubject);
 	}
 
@@ -41,7 +41,7 @@ class SubjectState {
 
 		return async (del: boolean) => {
 			if (del) {
-				await dataService.removeSubject({ id: subject.id });
+				await Database.removeSubject({ id: subject.id });
 			} else {
 				this.#subjects.set(subject.id, subject);
 			}
@@ -49,26 +49,28 @@ class SubjectState {
 	}
 
 	async editSubject(subject: Subject) {
-		await dataService.editSubject(subject);
+		await Database.editSubject(subject);
 		// this.subjects.set(subject.id, subject);
 	}
 
 	async addHomework(homework: Homework) {
-		let { id, image } = await dataService.addHomework(homework);
+		let { id, image } = await Database.addHomework(homework);
 		homework.id = id;
 		homework.image = image;
 		this.#subjects.get(homework.subjectId)!.homeworks.push(homework);
 	}
 
 	async removeHomework(homework: Homework) {
-		await dataService.removeHomework({ id: homework.id });
+		await Database.removeHomework({ id: homework.id });
 		let homeworks = this.#subjects.get(homework.subjectId)!.homeworks;
-		this.#subjects.get(homework.subjectId)!.homeworks = homeworks.filter((hw) => hw.id !== homework.id);
+		this.#subjects.get(homework.subjectId)!.homeworks = homeworks.filter(
+			(hw) => hw.id !== homework.id
+		);
 	}
 
 	async setHomeworkDone(homework: Homework, done: boolean) {
-		dataService.setHomeworkDone({ id: homework.id, done: done });
-		homework.done = done
+		Database.setHomeworkDone({ id: homework.id, done: done });
+		homework.done = done;
 	}
 }
 
@@ -79,7 +81,7 @@ class GlobalState {
 	currentTab = $state('');
 
 	showNotifications = $state(false);
-	notificationTime = $state('17:00')
+	notificationTime = $state('17:00');
 	notificationInterval = $state(86400000);
 
 	globalTheme = $state('system');

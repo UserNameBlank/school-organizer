@@ -3,7 +3,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Import } from 'lucide-svelte';
 	import { Preferences } from '$lib/preferences';
-	import { dataService } from '$lib/database';
+	import { Database } from '$lib/database';
 	import { t, locales, locale } from 'svelte-i18n';
 
 	import { Capacitor } from '@capacitor/core';
@@ -21,15 +21,15 @@
 	});
 
 	async function importContent() {
-		dataService.importContent();
+		Database.importContent();
 	}
 
 	async function exportContent() {
-		dataService.exportContent();
+		Database.exportContent();
 	}
 
 	async function saveContent() {
-		const database = dataService as DatabaseWeb;
+		const database = Database as DatabaseWeb;
 		database.exportToStorage();
 	}
 
@@ -41,7 +41,7 @@
 
 	async function onShowNotificationsChanged(checked: boolean) {
 		try {
-			await dataService.setNotificationOptions({
+			await Database.setNotificationOptions({
 				allow: checked,
 				time: globalState.notificationTime,
 				interval: globalState.notificationInterval
@@ -55,7 +55,7 @@
 	}
 
 	async function onTimeChanged(time: string) {
-		await dataService.setNotificationOptions({
+		await Database.setNotificationOptions({
 			allow: globalState.showNotifications,
 			time: time,
 			interval: globalState.notificationInterval
@@ -66,8 +66,8 @@
 	}
 
 	async function onIntervalChanged(selected: string) {
-		const selectedNumber = parseInt(selected)
-		await dataService.setNotificationOptions({
+		const selectedNumber = parseInt(selected);
+		await Database.setNotificationOptions({
 			allow: globalState.showNotifications,
 			time: globalState.notificationTime,
 			interval: selectedNumber
@@ -118,11 +118,7 @@
 	<div class="grid gap-2">
 		<Label for="select" class="text-lg">{$t('settings.general')}</Label>
 		<div class="grid gap-2 px-2">
-			<Select.Root
-				type="single"
-				allowDeselect={false}
-				onValueChange={onLanguageSelectedChanged}
-			>
+			<Select.Root type="single" allowDeselect={false} onValueChange={onLanguageSelectedChanged}>
 				<div class="flex flex-row items-center">
 					<p class="flex-1">{$t('settings.language')}</p>
 					<Select.Trigger class="w-1/2" id="select">{languageTriggerContent}</Select.Trigger>
@@ -135,11 +131,7 @@
 					{/each}
 				</Select.Content>
 			</Select.Root>
-			<Select.Root
-				type="single"
-				allowDeselect={false}
-				onValueChange={onThemeSelected}
-			>
+			<Select.Root type="single" allowDeselect={false} onValueChange={onThemeSelected}>
 				<div class="flex flex-row items-center">
 					<p class="flex-1">{$t('settings.theme-label')}</p>
 					<Select.Trigger class="w-1/2" id="select">
@@ -162,7 +154,10 @@
 		<div id="notifications" class="grid gap-3 px-2">
 			<div class="flex flex-row items-center">
 				<p class="flex-1">{$t('settings.notifications.switch-label')}</p>
-				<Switch bind:checked={globalState.showNotifications} onCheckedChange={onShowNotificationsChanged} />
+				<Switch
+					bind:checked={globalState.showNotifications}
+					onCheckedChange={onShowNotificationsChanged}
+				/>
 			</div>
 			{#if globalState.showNotifications}
 				<div transition:fly={{ y: -10 }} class="grid gap-3">
@@ -172,10 +167,7 @@
 					</div>
 					<div class="flex flex-row items-center">
 						<p class="flex-1">Interval</p>
-						<Select.Root
-							type="single"
-							onValueChange={onIntervalChanged}
-						>
+						<Select.Root type="single" onValueChange={onIntervalChanged}>
 							<Select.Trigger class="w-48">
 								{intervalTriggerContent}
 							</Select.Trigger>

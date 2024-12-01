@@ -7,7 +7,7 @@
 	import timetabletimes from '$lib/timetabletimes';
 	import { globalState, subjectState, timetable } from '$lib/state.svelte';
 
-	// The `$:` is to make sure svelte loads the title correctly when the locale changes
+	// The `effect` is to make sure svelte loads the title correctly when the locale changes
 	$effect(() => {
 		globalState.currentTab = $t('titles.home');
 	});

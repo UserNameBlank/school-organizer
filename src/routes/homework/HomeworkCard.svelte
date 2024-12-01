@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Homework } from '$lib/Homework';
 	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { dataService } from '$lib/database';
 
 	import { t } from 'svelte-i18n';
 

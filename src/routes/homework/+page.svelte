@@ -20,7 +20,7 @@
 	import { Calendar } from '$lib/components/ui/calendar';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Popover from '$lib/components/ui/popover';
-	import { dataService } from '$lib/database';
+	import { Database } from '$lib/database';
 	import type { Homework } from '$lib/Homework';
 	import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import HomeworkListItem from './HomeworkListItem.svelte';
@@ -58,8 +58,7 @@
 			.sort((a, b) => (a.homeworks[0].dueTo ?? Infinity) - (b.homeworks[0].dueTo ?? Infinity))
 	);
 	let secondHalf = $derived(
-		Array.from(subjectState.subjects)
-			.filter((it) => it.homeworks.length == 0)
+		Array.from(subjectState.subjects).filter((it) => it.homeworks.length == 0)
 	);
 
 	function onAddHomework(event: { detail: { id: number } }) {
@@ -81,7 +80,7 @@
 
 	function removeHomework(hw: Homework) {
 		currentHomeworks = currentHomeworks.filter((it) => it.id !== hw.id);
-		
+
 		subjectState.removeHomework(hw);
 	}
 
@@ -151,7 +150,7 @@
 	}
 
 	async function pickImage() {
-		currentImage = await dataService.pickImage();
+		currentImage = await Database.pickImage();
 	}
 
 	let showingImage = $state(false);
