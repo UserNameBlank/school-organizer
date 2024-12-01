@@ -3,6 +3,8 @@
 A Web/Mobile App for managing school activities,
 made using [SvelteKit](https://kit.svelte.dev/) and [CapacitorJS](https://capacitorjs.com/).
 
+You can try the web demo [here](https://UserNameBlank.github.io/school-organizer).
+
 ## Building
 
 Alternatively, you can get the app through the [last release](https://github.com/UserNameBlank/school-organizer/releases/latest).

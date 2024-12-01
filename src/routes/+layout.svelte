@@ -7,6 +7,7 @@
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { globalState, subjectState } from '$lib/state.svelte';
+	import { base } from '$app/paths';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -64,15 +65,19 @@
 	</div>
 	<Sheet.Content side="left" class="w-[250px]">
 		<ul class="list mt-20 text-xl font-semibold tracking-tight">
-			<li><a href="/" use:link><Home class="mr-3" />{$t('titles.home')}</a></li>
+			<li><a href="{base}/" use:link><Home class="mr-3" />{$t('titles.home')}</a></li>
 			<li>
-				<a href="/timetable" use:link><ChartNoAxesGantt class="mr-3" />{$t('titles.timetable')}</a>
+				<a href="{base}/timetable" use:link
+					><ChartNoAxesGantt class="mr-3" />{$t('titles.timetable')}</a
+				>
 			</li>
 			<li>
-				<a href="/homework" use:link><NotebookPen class="mr-3" />{$t('titles.homework')}</a>
+				<a href="{base}/homework" use:link><NotebookPen class="mr-3" />{$t('titles.homework')}</a>
 			</li>
-			<li><a href="/subjects" use:link><Layers class="mr-3" />{$t('titles.subjects')}</a></li>
-			<li><a href="/settings" use:link><Settings class="mr-3" />{$t('titles.settings')}</a></li>
+			<li><a href="{base}/subjects" use:link><Layers class="mr-3" />{$t('titles.subjects')}</a></li>
+			<li>
+				<a href="{base}/settings" use:link><Settings class="mr-3" />{$t('titles.settings')}</a>
+			</li>
 		</ul>
 	</Sheet.Content>
 </Sheet.Root>
