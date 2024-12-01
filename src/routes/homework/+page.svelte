@@ -12,7 +12,6 @@
 	} from 'lucide-svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { t, locale } from 'svelte-i18n';
-	import { subjects, timetable, currentTab as globalCurrentTab } from '$lib/stores';
 	import timetabletimes from '$lib/timetabletimes';
 	import HomeworkCard from './HomeworkCard.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -27,9 +26,10 @@
 	import HomeworkListItem from './HomeworkListItem.svelte';
 	import { ImageViewer } from 'svelte-image-viewer';
 	import clsx from 'clsx';
+	import { globalState, subjectState, timetable } from '$lib/state.svelte';
 
 	$effect(() => {
-		$globalCurrentTab = $t('titles.homework');
+		globalState.currentTab = $t('titles.homework');
 	});
 
 	let drawerOpen = $state(false);
@@ -53,14 +53,12 @@
 	const addCounter = () => untilCounter++;
 
 	let firstHalf = $derived(
-		Array.from($subjects)
-			.map(([_key, val]) => val)
+		Array.from(subjectState.subjects)
 			.filter((it) => it.homeworks.length != 0)
 			.sort((a, b) => (a.homeworks[0].dueTo ?? Infinity) - (b.homeworks[0].dueTo ?? Infinity))
 	);
 	let secondHalf = $derived(
-		Array.from($subjects)
-			.map(([_key, val]) => val)
+		Array.from(subjectState.subjects)
 			.filter((it) => it.homeworks.length == 0)
 	);
 
@@ -83,14 +81,8 @@
 
 	function removeHomework(hw: Homework) {
 		currentHomeworks = currentHomeworks.filter((it) => it.id !== hw.id);
-		dataService.removeHomework({ id: hw.id });
-
-		subjects.update((map) => {
-			let sub = map.get(hw.subjectId)!;
-			sub.homeworks = currentHomeworks;
-			map.set(sub.id, sub);
-			return map;
-		});
+		
+		subjectState.removeHomework(hw);
 	}
 
 	function getDueDate(): Date | null {
@@ -110,7 +102,7 @@
 			for (let lh = 0; lh < 12; lh++) {
 				const slot = lh * 5 + k;
 
-				const slotId = $timetable[slot]?.id;
+				const slotId = timetable[slot]?.id;
 				if (slotId !== null && slotId === currentId) {
 					if (untilCounter > 1) {
 						untilCounter--;
@@ -153,16 +145,9 @@
 			done: false,
 			image: currentImage?.uri ?? null
 		};
-		const { id, image } = await dataService.addHomework(homework);
-		homework.id = id;
-		homework.image = image;
+		subjectState.addHomework(homework);
 
 		currentDesc = '';
-
-		subjects.update((map) => {
-			map.get(homework.subjectId)!.homeworks.push(homework);
-			return map;
-		});
 	}
 
 	async function pickImage() {
@@ -198,7 +183,7 @@
 {/if}
 
 <Drawer.Root bind:open={drawerOpen}>
-	{#if $subjects.size === 0}
+	{#if subjectState.size === 0}
 		<div class="mt-40 grid w-full items-center justify-center gap-4">
 			<h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">
 				{$t('homework.no-subjects.title')}

@@ -5,9 +5,8 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { t } from 'svelte-i18n';
 	import { Home, ChartNoAxesGantt, NotebookPen, Menu, Layers, Settings } from 'lucide-svelte';
-	import { loadStores } from '$lib/database';
-	import { currentTab } from '$lib/stores';
 	import { Toaster } from '$lib/components/ui/sonner';
+	import { globalState, subjectState } from '$lib/state.svelte';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -18,7 +17,7 @@
 	async function initData() {
 		console.log('Data is being initialized...');
 
-		loadStores();
+		subjectState.load();
 	}
 
 	initData();
@@ -56,7 +55,7 @@
 		<div class="menu flex w-full flex-row items-center p-3">
 			<Sheet.Trigger><Menu size={30} /></Sheet.Trigger>
 			<h4 class="flex-1 scroll-m-20 text-center text-2xl font-semibold tracking-tight">
-				{$currentTab}
+				{globalState.currentTab}
 			</h4>
 		</div>
 		<div class="flex-1 overflow-y-auto">

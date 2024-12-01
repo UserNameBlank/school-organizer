@@ -5,13 +5,6 @@
 	import { Preferences } from '$lib/preferences';
 	import { dataService } from '$lib/database';
 	import { t, locales, locale } from 'svelte-i18n';
-	import {
-		currentTab,
-		showNotifications,
-		notificationTime,
-		notificationInterval,
-		globalTheme
-	} from '$lib/stores';
 
 	import { Capacitor } from '@capacitor/core';
 	import Label from '$lib/components/ui/label/label.svelte';
@@ -20,10 +13,11 @@
 	import { fly } from 'svelte/transition';
 	import type { DatabaseWeb } from '$lib/database/web';
 	import { setMode } from 'mode-watcher';
+	import { globalState } from '$lib/state.svelte';
 	const platform = Capacitor.getPlatform();
 
 	$effect(() => {
-		$currentTab = $t('titles.settings');
+		globalState.currentTab = $t('titles.settings');
 	});
 
 	async function importContent() {
@@ -49,60 +43,57 @@
 		try {
 			await dataService.setNotificationOptions({
 				allow: checked,
-				time: $notificationTime,
-				interval: $notificationInterval
+				time: globalState.notificationTime,
+				interval: globalState.notificationInterval
 			});
 
-			$showNotifications = checked;
+			globalState.showNotifications = checked;
 			Preferences.setString({ key: 'show-notifications', value: checked.toString() });
 		} catch {
-			$showNotifications = false;
+			globalState.showNotifications = false;
 		}
 	}
 
 	async function onTimeChanged(time: string) {
 		await dataService.setNotificationOptions({
-			allow: $showNotifications,
+			allow: globalState.showNotifications,
 			time: time,
-			interval: $notificationInterval
+			interval: globalState.notificationInterval
 		});
 
-		$notificationTime = time;
+		globalState.notificationTime = time;
 		Preferences.setString({ key: 'notification-time', value: time });
 	}
 
 	async function onIntervalChanged(selected: string) {
-		const selectedNumber = parseInt(selected);
+		const selectedNumber = parseInt(selected)
 		await dataService.setNotificationOptions({
-			allow: $showNotifications,
-			time: $notificationTime,
+			allow: globalState.showNotifications,
+			time: globalState.notificationTime,
 			interval: selectedNumber
 		});
 
-		$notificationInterval = selectedNumber;
+		globalState.notificationInterval = selectedNumber;
 		Preferences.setLong({ key: 'notification-interval', value: selectedNumber });
 	}
 
-	const intervalTimes = new Map<string, string>([
-		['86400000', $t('settings.notification-intervals.one')],
-		['43200000', $t('settings.notification-intervals.two')],
-		['21600000', $t('settings.notification-intervals.three')]
+	const intervalTimes = new Map<number, string>([
+		[86400000, $t('settings.notification-intervals.one')],
+		[43200000, $t('settings.notification-intervals.two')],
+		[21600000, $t('settings.notification-intervals.three')]
 	]);
 
 	function onThemeSelected(selected: string) {
-		$globalTheme = selected;
+		globalState.globalTheme = selected;
 		Preferences.setString({ key: 'theme', value: selected });
 		setMode(selected as any);
 	}
 
-	let selectedLanguage = $state($locale);
-	const languageTriggerContent = $derived($t('settings.languages.' + selectedLanguage));
+	const languageTriggerContent = $derived($t('settings.languages.' + $locale));
 
-	let selectedTheme = $state($globalTheme);
-	const themeTriggerContent = $derived($t('settings.themes.' + selectedTheme));
+	const themeTriggerContent = $derived($t('settings.themes.' + globalState.globalTheme));
 
-	let selectedInterval = $state($notificationInterval.toString());
-	let intervalTriggerContent = $derived(intervalTimes.get(selectedInterval));
+	let intervalTriggerContent = $derived(intervalTimes.get(globalState.notificationInterval));
 
 	const themeSettings = ['system', 'dark', 'light'];
 </script>
@@ -129,7 +120,7 @@
 		<div class="grid gap-2 px-2">
 			<Select.Root
 				type="single"
-				bind:value={selectedLanguage as string}
+				allowDeselect={false}
 				onValueChange={onLanguageSelectedChanged}
 			>
 				<div class="flex flex-row items-center">
@@ -146,7 +137,7 @@
 			</Select.Root>
 			<Select.Root
 				type="single"
-				bind:value={selectedTheme as string}
+				allowDeselect={false}
 				onValueChange={onThemeSelected}
 			>
 				<div class="flex flex-row items-center">
@@ -171,19 +162,18 @@
 		<div id="notifications" class="grid gap-3 px-2">
 			<div class="flex flex-row items-center">
 				<p class="flex-1">{$t('settings.notifications.switch-label')}</p>
-				<Switch bind:checked={$showNotifications} onCheckedChange={onShowNotificationsChanged} />
+				<Switch bind:checked={globalState.showNotifications} onCheckedChange={onShowNotificationsChanged} />
 			</div>
-			{#if $showNotifications}
+			{#if globalState.showNotifications}
 				<div transition:fly={{ y: -10 }} class="grid gap-3">
 					<div class="flex flex-row items-center">
 						<p class="flex-1">{$t('settings.notifications.time-label')}</p>
-						<Timepicker time={$notificationTime} onSubmit={onTimeChanged} />
+						<Timepicker time={globalState.notificationTime} onSubmit={onTimeChanged} />
 					</div>
 					<div class="flex flex-row items-center">
 						<p class="flex-1">Interval</p>
 						<Select.Root
 							type="single"
-							bind:value={selectedInterval}
 							onValueChange={onIntervalChanged}
 						>
 							<Select.Trigger class="w-48">
@@ -191,7 +181,7 @@
 							</Select.Trigger>
 							<Select.Content>
 								{#each intervalTimes as [key, value]}
-									<Select.Item value={key} label={value}>{value}</Select.Item>
+									<Select.Item value={key.toString()} label={value}>{value}</Select.Item>
 								{/each}
 							</Select.Content>
 						</Select.Root>

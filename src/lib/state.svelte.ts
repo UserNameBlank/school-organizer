@@ -1,18 +1,39 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { dataService } from './database';
 import type { Homework } from './Homework';
 import type { Subject } from './Subject';
 
 class SubjectState {
-	#subjects = $state<Map<number, Subject>>(new Map());
+	#subjects = $state<Map<number, Subject>>(new SvelteMap());
 
-	get subjects(): Iterator<Subject> {
-		return this.#subjects.values();
+	async load() {
+		await dataService.removeOldHomework();
+
+		const subs = (await dataService.getSubjectsWithHomework()).subjects;
+
+		this.#subjects = subs.reduce((map, sub) => {
+			const reactiveSubject = $state(sub);
+			return map.set(sub.id, reactiveSubject);
+		}, new SvelteMap<number, Subject>());
+	}
+
+	get subjects(): Iterable<Subject> {
+		return this.#subjects.values()
+	}
+
+	get(id: number): Subject | undefined {
+		return this.#subjects.get(id)
+	}
+
+	get size(): number {
+		return this.#subjects.size;
 	}
 
 	async addSubject(subject: Subject) {
 		let { id } = await dataService.addSubject(subject);
 		subject.id = id;
-		this.#subjects.set(subject.id, subject);
+		const reactiveSubject = $state(subject)
+		this.#subjects.set(subject.id, reactiveSubject);
 	}
 
 	async removeSubject(subject: Subject) {
@@ -29,7 +50,7 @@ class SubjectState {
 
 	async editSubject(subject: Subject) {
 		await dataService.editSubject(subject);
-		this.#subjects.set(subject.id, subject);
+		// this.subjects.set(subject.id, subject);
 	}
 
 	async addHomework(homework: Homework) {
@@ -42,17 +63,26 @@ class SubjectState {
 	async removeHomework(homework: Homework) {
 		await dataService.removeHomework({ id: homework.id });
 		let homeworks = this.#subjects.get(homework.subjectId)!.homeworks;
-		homeworks = homeworks.filter((hw) => hw.id !== homework.id);
+		this.#subjects.get(homework.subjectId)!.homeworks = homeworks.filter((hw) => hw.id !== homework.id);
+	}
+
+	async setHomeworkDone(homework: Homework, done: boolean) {
+		dataService.setHomeworkDone({ id: homework.id, done: done });
+		homework.done = done
 	}
 }
 
-export const subjects = $state<Map<number, Subject>>(new Map());
+export const subjectState = new SubjectState();
 export const timetable = $state<(Subject | null)[]>(new Array(5 * 12).fill(null));
 
-export const currentTab = $state('');
+class GlobalState {
+	currentTab = $state('');
 
-export const showNotifications = $state(false);
-export const notificationTime = $state('17:00');
-export const notificationInterval = $state(86400000);
+	showNotifications = $state(false);
+	notificationTime = $state('17:00')
+	notificationInterval = $state(86400000);
 
-export const globalTheme = $state('system');
+	globalTheme = $state('system');
+}
+
+export const globalState = new GlobalState();

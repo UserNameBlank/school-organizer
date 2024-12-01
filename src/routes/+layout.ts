@@ -9,17 +9,12 @@ import '$lib/i18n';
 import type { LayoutLoad } from './$types';
 import { Preferences } from '$lib/preferences';
 import { App } from '@capacitor/app';
-import { dataService, loadStores } from '$lib/database';
+import { dataService } from '$lib/database';
 import { toast } from 'svelte-sonner';
 import { setMode } from 'mode-watcher';
 import { goto } from '$app/navigation';
 import { error } from './stacktrace/stores';
-import {
-	globalTheme,
-	notificationInterval,
-	notificationTime,
-	showNotifications
-} from '$lib/stores';
+import { globalState, subjectState } from '$lib/state.svelte';
 
 export const prerender = true;
 export const ssr = false;
@@ -36,7 +31,7 @@ export const load: LayoutLoad = async () => {
 	const $format = unwrapFunctionStore(format);
 
 	dataService.addListener('contentImported', () => {
-		loadStores();
+		subjectState.load();
 		toast.success($format('settings.content-imported'));
 	});
 
@@ -64,17 +59,14 @@ export const load: LayoutLoad = async () => {
 	);
 
 	locale.set((await Preferences.getString({ key: 'language' })).value ?? getLocaleFromNavigator());
-	showNotifications.set(
-		(await Preferences.getString({ key: 'show-notifications' })).value == 'true'
-	);
-	notificationTime.set(
-		(await Preferences.getString({ key: 'notification-time' })).value ?? '17:00'
-	);
-	notificationInterval.set(
-		(await Preferences.getLong({ key: 'notification-interval' })).value ?? 86400000
-	);
+	globalState.showNotifications =
+		(await Preferences.getString({ key: 'show-notifications' })).value == 'true';
+	globalState.notificationTime = 
+		(await Preferences.getString({ key: 'notification-time' })).value ?? '17:00';
+	globalState.notificationInterval = 
+		(await Preferences.getLong({ key: 'notification-interval' })).value ?? 86400000;
 	const theme = (await Preferences.getString({ key: 'theme' })).value ?? 'system';
-	globalTheme.set(theme);
+	globalState.globalTheme = theme;
 	setMode(theme as any);
 	await waitLocale();
 };

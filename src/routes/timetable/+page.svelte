@@ -3,21 +3,21 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Toggle } from '$lib/components/ui/toggle';
 	import { Pencil, PencilOff, Plus } from 'lucide-svelte';
-	import { currentTab, subjects, timetable } from '$lib/stores';
 	import { slide } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import type { Subject } from '$lib/Subject';
 	import { dataService } from '$lib/database';
 	import { t, json } from 'svelte-i18n';
+	import { globalState, subjectState, timetable } from '$lib/state.svelte';
 
 	$effect(() => {
-		$currentTab = $t('titles.timetable');
+		globalState.currentTab = $t('titles.timetable');
 	});
 
 	let editMode = $state(false);
 	let drawerOpen = $state(false);
 	let currentSlot: number | null = null;
-	let selectedSubject: Subject;
+	let selectedSubject = $state<Subject | null>(null);
 	let editSubject = $state(false);
 
 	function setSlot(slot: number) {
@@ -35,7 +35,7 @@
 	function clearSlot() {
 		drawerOpen = false;
 
-		$timetable[currentSlot!] = null;
+		timetable[currentSlot!] = null;
 		dataService.clearTimetableSlot({ id: currentSlot! });
 	}
 
@@ -44,12 +44,12 @@
 
 		drawerOpen = false;
 
-		$timetable[currentSlot!] = selectedSubject;
+		timetable[currentSlot!] = selectedSubject;
 		dataService.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
 	}
 
 	function onSelectSubject(v: string) {
-		const subject = $subjects.get(parseInt(v))!;
+		const subject = subjectState.get(parseInt(v))!;
 		selectedSubject = subject;
 	}
 
@@ -132,7 +132,7 @@
 			<!-- </div> -->
 			<div class="grid flex-1 grid-cols-5 grid-rows-12 gap-4 p-4">
 				{#if editMode}
-					{#each $timetable as subject, i}
+					{#each timetable as subject, i}
 						{#if subject}
 							<button
 								onclick={() => onEditSlot(i)}
@@ -150,7 +150,7 @@
 						{/if}
 					{/each}
 				{:else}
-					{#each $timetable as subject}
+					{#each timetable as subject}
 						{#if subject}
 							<div
 								class="flex items-center justify-center rounded-md bg-blue-500 p-4 text-xl font-semibold"
@@ -185,14 +185,22 @@
 					<Drawer.Title>{$t('timetable.drawer.set-slot.title')}</Drawer.Title>
 					<Drawer.Description>{$t('timetable.drawer.set-slot.subtitle')}</Drawer.Description>
 				</Drawer.Header>
-				<div class="p-4"><Select.Trigger>Slot</Select.Trigger></div>
+				<div class="p-4">
+					<Select.Trigger>
+						{#if selectedSubject == null}
+							Slot
+						{:else}
+							<span style="color: {selectedSubject.color}">{selectedSubject.name}</span>
+						{/if}
+					</Select.Trigger>
+				</div>
 				<Drawer.Footer>
 					<Button onclick={submitSlot}>{$t('timetable.drawer.set-slot.button')}</Button>
 					<Drawer.Close>{$t('ui.cancel')}</Drawer.Close>
 				</Drawer.Footer>
 
 				<Select.Content>
-					{#each $subjects.values() as subject}
+					{#each subjectState.subjects as subject}
 						<Select.Item
 							value={subject.id.toString()}
 							class="flex flex-row"
@@ -207,7 +215,7 @@
 
 <Toggle
 	bind:pressed={editMode}
-	class="fixed bottom-8 right-8 z-30 rounded-full bg-background px-4 py-7 shadow-md"
+	class="fixed bottom-8 right-8 z-30 rounded-full aspect-square bg-background p-6 shadow-md"
 	variant="outline"
 >
 	{#if editMode}

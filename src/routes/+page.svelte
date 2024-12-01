@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { currentTab, subjects, timetable } from '$lib/stores';
 	import { cn, getTimeLabel } from '$lib/utils';
 	import { differenceInCalendarDays } from 'date-fns';
 	import { Check, CircleCheck } from 'lucide-svelte';
 	import type { Subject } from '$lib/Subject';
 	import timetabletimes from '$lib/timetabletimes';
+	import { globalState, subjectState, timetable } from '$lib/state.svelte';
 
 	// The `$:` is to make sure svelte loads the title correctly when the locale changes
 	$effect(() => {
-		$currentTab = $t('titles.home');
+		globalState.currentTab = $t('titles.home');
 	});
 
 	let homeworksArray = $derived(
-		Array.from($subjects)
-			.map(([_, val]) => val.homeworks)
+		Array.from(subjectState.subjects)
+			.map((val) => val.homeworks)
 			.flat()
 	);
 	let undoneHomework = $derived(homeworksArray.filter((homework) => !homework.done));
@@ -42,7 +42,7 @@
 			: null
 	);
 	let earliestHomeworkSubject = $derived(
-		earliestHomework ? $subjects.get(earliestHomework.subjectId) : null
+		earliestHomework ? subjectState.get(earliestHomework.subjectId) : null
 	);
 
 	function getNextLesson(timetable: (Subject | null)[]): Subject | null {
@@ -71,7 +71,7 @@
 		return null;
 	}
 
-	let nextSubject = $derived(getNextLesson($timetable));
+	let nextSubject = $derived(getNextLesson(timetable));
 </script>
 
 <div class="grid w-full gap-4 px-8 py-16">
@@ -103,11 +103,11 @@
 				{#each homeworkForToday.length > 0 ? homeworkForToday : homeworkForTomorrow as homework}
 					<div class="mt-2 flex items-center">
 						<p
-							style="background-color: {$subjects.get(homework.subjectId)?.color}"
+							style="background-color: {subjectState.get(homework.subjectId)?.color}"
 							class="rounded-md px-2 py-0.5"
 							class:opacity-50={homework.done}
 						>
-							{$subjects.get(homework.subjectId)?.name}
+							{subjectState.get(homework.subjectId)?.name}
 						</p>
 						<p class={cn('mx-6 flex-1 text-lg', homework.done && 'line-through opacity-50')}>
 							{homework.desc}

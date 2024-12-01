@@ -6,9 +6,9 @@
 	import { t } from 'svelte-i18n';
 
 	import { send, receive } from '$lib/transition';
-	import { subjects } from '$lib/stores';
 	import { cn, getTimeLabel } from '$lib/utils';
 	import { ripple } from '$lib/ripple/index.svelte';
+	import { subjectState } from '$lib/state.svelte';
 
 	interface Props {
 		id: number;
@@ -41,16 +41,8 @@
 		}
 	}
 
-	async function onCheckedChange(checked: any, homeworkId: number) {
-		dataService.setHomeworkDone({ id: homeworkId, done: checked });
-
-		homeworks = homeworks.map((it) => (it.id === homeworkId ? { ...it, done: checked } : it));
-
-		// homeworkStore.update((map) => map.set(homeworkId, { ...map.get(homeworkId)!, done: checked }));
-		subjects.update((map) => {
-			map.get(id)!.homeworks = homeworks;
-			return map;
-		});
+	async function onCheckedChange(checked: boolean, homework: Homework) {
+		subjectState.setHomeworkDone(homework, checked);
 	}
 
 	let allSame = $derived(homeworks.every((it) => it.dueTo == homeworks[0].dueTo));
@@ -94,7 +86,7 @@
 
 						<div class="translate-y-0.5" role="none" onclick={(e) => e.stopImmediatePropagation()}>
 							<Checkbox
-								onCheckedChange={(checked: boolean) => onCheckedChange(checked, homework.id)}
+								onCheckedChange={(checked: boolean) => onCheckedChange(checked, homework)}
 								checked={homework.done}
 							></Checkbox>
 						</div>

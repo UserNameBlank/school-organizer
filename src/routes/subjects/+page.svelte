@@ -1,7 +1,6 @@
 <script lang="ts">
 	import SubjectCard from './SubjectCard.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { dataService } from '$lib/database';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import * as Popover from '$lib/components/ui/popover';
 
@@ -11,13 +10,13 @@
 	import { Colorpicker } from '$lib/components/ui/colorpicker';
 
 	import { t } from 'svelte-i18n';
-	import { currentTab, subjects } from '$lib/stores';
 	import type { Subject } from '$lib/Subject';
 	import { toast } from 'svelte-sonner';
 	import { clsx } from 'clsx';
+	import { globalState, subjectState } from '$lib/state.svelte';
 
 	$effect(() => {
-		$currentTab = $t('titles.subjects');
+		globalState.currentTab = $t('titles.subjects');
 	});
 
 	let colors = $state<string[]>([
@@ -58,12 +57,9 @@
 	async function submittedNewSubject() {
 		try {
 			const subject = { id: 0, name: selectedName, color: colors[selectedColor], homeworks: [] };
-			const { id } = await dataService.addSubject(subject);
-			subject.id = id;
+			subjectState.addSubject(subject);
 
 			drawerOpen = false;
-
-			subjects.update((map) => map.set(id, subject));
 		} catch {
 			toast.error($t('subjects.name-already-exists', { values: { name: selectedName } }));
 		}
@@ -72,24 +68,17 @@
 	async function removeSubject() {
 		drawerOpen = false;
 
-		const subj = structuredClone(currentSubject!);
+		const subj = currentSubject!!;
+		const del = await subjectState.removeSubject(subj);
 		toast($t('subjects.subject-removed', { values: { name: subj.name } }), {
 			action: {
 				label: $t('ui.undo'),
 				onClick: () => {
-					subjects.update((map) => {
-						map.set(subj.id, subj);
-						return map;
-					});
+					del(false);
 				}
 			},
-			onAutoClose: () => dataService.removeSubject({ id: subj.id }),
-			onDismiss: () => dataService.removeSubject({ id: subj.id })
-		});
-
-		subjects.update((map) => {
-			map.delete(currentSubject!.id);
-			return map;
+			onAutoClose: () => del(true),
+			onDismiss: () => del(true)
 		});
 	}
 
@@ -101,15 +90,13 @@
 			currentSubject!.color = colors[selectedColor];
 		}
 
-		dataService.editSubject(currentSubject!);
-
-		subjects.update((map) => map); // Trigger update
+		subjectState.editSubject(currentSubject!);
 	}
 
 	async function onEditSubject(event: { detail: { id: number } }) {
 		editingSubject = true;
 
-		const subject = $subjects.get(event.detail.id)!;
+		const subject = subjectState.get(event.detail.id)!;
 		currentSubject = subject;
 		selectedName = subject.name;
 		selectedColor = colors.indexOf(subject.color);
@@ -128,7 +115,7 @@
 </script>
 
 <Drawer.Root bind:open={drawerOpen}>
-	{#if $subjects.size === 0}
+	{#if subjectState.size === 0}
 		<div class="mt-40 grid w-full items-center justify-center gap-4">
 			<h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">
 				{$t('subjects.no-subjects')}
@@ -141,7 +128,7 @@
 		</div>
 	{:else}
 		<div class="grid gap-4 p-4">
-			{#each $subjects.values() as subject (subject.id)}
+			{#each subjectState.subjects as subject (subject.id)}
 				<SubjectCard
 					id={subject.id}
 					name={subject.name}
