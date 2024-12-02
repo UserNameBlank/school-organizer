@@ -26,7 +26,7 @@
 	import HomeworkListItem from './HomeworkListItem.svelte';
 	import { ImageViewer } from 'svelte-image-viewer';
 	import clsx from 'clsx';
-	import { globalState, subjectState, timetable } from '$lib/state.svelte';
+	import { globalState, subjectState } from '$lib/state.svelte';
 
 	$effect(() => {
 		globalState.currentTab = $t('titles.homework');
@@ -101,7 +101,7 @@
 			for (let lh = 0; lh < 12; lh++) {
 				const slot = lh * 5 + k;
 
-				const slotId = timetable[slot]?.id;
+				const slotId = subjectState.timetable[slot]?.id;
 				if (slotId !== null && slotId === currentId) {
 					if (untilCounter > 1) {
 						untilCounter--;

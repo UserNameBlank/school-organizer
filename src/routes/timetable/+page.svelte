@@ -8,7 +8,7 @@
 	import type { Subject } from '$lib/Subject';
 	import { Database } from '$lib/database';
 	import { t, json } from 'svelte-i18n';
-	import { globalState, subjectState, timetable } from '$lib/state.svelte';
+	import { globalState, subjectState } from '$lib/state.svelte';
 
 	$effect(() => {
 		globalState.currentTab = $t('titles.timetable');
@@ -35,7 +35,7 @@
 	function clearSlot() {
 		drawerOpen = false;
 
-		timetable[currentSlot!] = null;
+		subjectState.timetable[currentSlot!] = null;
 		Database.clearTimetableSlot({ id: currentSlot! });
 	}
 
@@ -44,7 +44,7 @@
 
 		drawerOpen = false;
 
-		timetable[currentSlot!] = selectedSubject;
+		subjectState.timetable[currentSlot!] = selectedSubject;
 		Database.setTimetableSlot({ id: currentSlot!, subjectId: selectedSubject.id });
 	}
 
@@ -132,7 +132,7 @@
 			<!-- </div> -->
 			<div class="grid flex-1 grid-cols-5 grid-rows-12 gap-4 p-4">
 				{#if editMode}
-					{#each timetable as subject, i}
+					{#each subjectState.timetable as subject, i}
 						{#if subject}
 							<button
 								onclick={() => onEditSlot(i)}
@@ -150,7 +150,7 @@
 						{/if}
 					{/each}
 				{:else}
-					{#each timetable as subject}
+					{#each subjectState.timetable as subject}
 						{#if subject}
 							<div
 								class="flex items-center justify-center rounded-md bg-blue-500 p-4 text-xl font-semibold"

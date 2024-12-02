@@ -5,7 +5,7 @@
 	import { Check, CircleCheck } from 'lucide-svelte';
 	import type { Subject } from '$lib/Subject';
 	import timetabletimes from '$lib/timetabletimes';
-	import { globalState, subjectState, timetable } from '$lib/state.svelte';
+	import { globalState, subjectState } from '$lib/state.svelte';
 
 	// The `effect` is to make sure svelte loads the title correctly when the locale changes
 	$effect(() => {
@@ -71,7 +71,7 @@
 		return null;
 	}
 
-	let nextSubject = $derived(getNextLesson(timetable));
+	let nextSubject = $derived(getNextLesson(subjectState.timetable));
 </script>
 
 <div class="grid w-full gap-4 px-8 py-16">

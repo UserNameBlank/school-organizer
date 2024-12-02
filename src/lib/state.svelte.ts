@@ -5,16 +5,30 @@ import type { Subject } from './Subject';
 
 class SubjectState {
 	#subjects = $state<Map<number, Subject>>(new SvelteMap());
+	timetable = $state<(Subject | null)[]>(new Array(5 * 12).fill(null));
 
 	async load() {
+		// Remove the checked and expired homework
 		await Database.removeOldHomework();
 
+		// load the subject state from the database
 		const subs = (await Database.getSubjectsWithHomework()).subjects;
 
 		this.#subjects = subs.reduce((map, sub) => {
 			const reactiveSubject = $state(sub);
 			return map.set(sub.id, reactiveSubject);
 		}, new SvelteMap<number, Subject>());
+
+		// load the timetable state from the database
+		const timetable = new Array(5 * 12).fill(null);
+
+		const slots = (await Database.getTimetableSlots()).slots;
+
+		for (const slot of slots) {
+			timetable[slot.id] = this.get(slot.subjectId)!;
+		}
+
+		this.timetable = timetable;
 	}
 
 	get subjects(): Iterable<Subject> {
@@ -75,7 +89,6 @@ class SubjectState {
 }
 
 export const subjectState = new SubjectState();
-export const timetable = $state<(Subject | null)[]>(new Array(5 * 12).fill(null));
 
 class GlobalState {
 	currentTab = $state('');
